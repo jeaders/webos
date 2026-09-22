@@ -487,11 +487,6 @@ class WebOSApp {
     createDesktopIcons() {
         const container = document.getElementById('desktop-icons');
         container.innerHTML = '';
-        let iconPositions = {};
-        try {
-            const saved = localStorage.getItem('webos_icon_positions');
-            if (saved) iconPositions = JSON.parse(saved);
-        } catch (e) { iconPositions = {}; }
         this.desktopApps.forEach(app => {
             const icon = document.createElement('div');
             icon.className = `desktop-icon ${this.state.iconSize !== 'medium' ? `size-${this.state.iconSize}` : ''}`;
@@ -500,12 +495,6 @@ class WebOSApp {
                 <div class="icon-img">${app.icon}</div>
                 <div class="icon-label">${app.name}</div>
             `;
-            const pos = iconPositions[app.id];
-            if (pos) {
-                icon.style.left = pos.x + 'px';
-                icon.style.top = pos.top + 'px';
-                icon.style.position = 'absolute';
-            }
             icon.addEventListener('dblclick', () => this.openApp(app.id));
             icon.addEventListener('click', () => {
                 this.showTutorMessage(`Questa è l'app "${app.name}": ${app.description}. Fai doppio click per aprirla!`);
@@ -530,15 +519,11 @@ class WebOSApp {
             if (clientX === undefined || clientY === undefined) return;
             isDragging = true;
             element.classList.add('dragging');
-            const rect = element.getBoundingClientRect();
-            const parentRect = element.parentElement.getBoundingClientRect();
             startX = clientX;
             startY = clientY;
-            initialLeft = rect.left - parentRect.left;
-            initialTop = rect.top - parentRect.top;
-            element.style.position = 'absolute';
-            element.style.left = initialLeft + 'px';
-            element.style.top = initialTop + 'px';
+            const rect = element.getBoundingClientRect();
+            initialLeft = rect.left;
+            initialTop = rect.top;
         };
 
         const onPointerMove = (e) => {
@@ -546,36 +531,18 @@ class WebOSApp {
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
             if (clientX === undefined || clientY === undefined) return;
-            const parentRect = element.parentElement.getBoundingClientRect();
             const deltaX = clientX - startX;
             const deltaY = clientY - startY;
-            let newX = initialLeft + deltaX;
-            let newY = initialTop + deltaY;
-            newX = Math.max(0, Math.min(newX, parentRect.width - element.offsetWidth));
-            newY = Math.max(0, Math.min(newY, parentRect.height - element.offsetHeight));
-            element.style.left = newX + 'px';
-            element.style.top = newY + 'px';
+            element.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+            element.style.zIndex = 999;
         };
 
         const onPointerUp = () => {
             if (!isDragging) return;
             isDragging = false;
             element.classList.remove('dragging');
-            const appId = element.dataset.app;
-            if (appId) {
-                let iconPositions = {};
-                try {
-                    const saved = localStorage.getItem('webos_icon_positions');
-                    if (saved) iconPositions = JSON.parse(saved);
-                } catch (err) { iconPositions = {}; }
-                iconPositions[appId] = {
-                    x: parseInt(element.style.left || 0),
-                    top: parseInt(element.style.top || 0)
-                };
-                try {
-                    localStorage.setItem('webos_icon_positions', JSON.stringify(iconPositions));
-                } catch (err) {}
-            }
+            element.style.transform = '';
+            element.style.zIndex = '';
         };
 
         element.addEventListener('mousedown', onPointerDown);
