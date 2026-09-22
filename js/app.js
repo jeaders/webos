@@ -144,17 +144,28 @@ class WebOSApp {
     }
 
     init() {
-        this.initFilesystem();
-        this.initSoundEngine();
-        this.setupEventListeners();
-        this.updateClock();
-        setInterval(() => this.updateClock(), 1000);
-        this.updateNotificationBadge();
+        try {
+            this.initFilesystem();
+            this.initSoundEngine();
+            this.setupEventListeners();
+            this.updateClock();
+            setInterval(() => this.updateClock(), 1000);
+            this.updateNotificationBadge();
+        } catch (e) {
+            console.error('[webosx] init error', e);
+        }
         if (this.state.profile) {
             this.boot();
         } else {
             this.showProfileSelection();
         }
+        setTimeout(() => {
+            const bs = document.getElementById('boot-screen');
+            if (bs && !bs.classList.contains('hidden')) {
+                bs.classList.add('hidden');
+                if (!this.state.profile) this.showProfileSelection();
+            }
+        }, 6000);
     }
 
     initFilesystem() {
@@ -345,6 +356,9 @@ class WebOSApp {
                 }, 300);
             }
         }, 200);
+        setTimeout(() => {
+            profileSelect.style.display = 'block';
+        }, 4000);
     }
 
     selectProfile(profile) {
@@ -366,34 +380,44 @@ class WebOSApp {
     }
 
     boot() {
-        const bootScreen = document.getElementById('boot-screen');
-        if (bootScreen) {
-            bootScreen.classList.add('hidden');
-        }
-        const desktop = document.getElementById('desktop');
-        const topBar = document.getElementById('top-bar');
-        const startMenuUser = document.getElementById('start-menu-user');
-        if (desktop) desktop.classList.remove('hidden');
-        if (topBar) topBar.classList.remove('hidden');
-        if (startMenuUser) {
-            const names = {
-                bambino: '👦 Bambino',
-                adulto: '👤 Utente',
-                anziano: '👴 Nonno'
-            };
-            startMenuUser.textContent = names[this.state.profile] || '👤 Utente';
-        }
-        this.applySettings();
-        this.createDesktopIcons();
-        this.initWeatherWidget();
-        this.initParallax();
-        this.initClockWidget();
-        setTimeout(() => {
-            this.showTutorMessage('Ciao! Benvenuto nel WebOSx! Sono il tuo Tutor AI. Clicca su "Guida" per iniziare un tour, oppure esplora pure le app!');
-        }, 1000);
-        if (this.state.userMode === 'anziano') {
-            const voiceBtn = document.getElementById('voice-btn');
-            if (voiceBtn) voiceBtn.classList.remove('hidden');
+        try {
+            const bootScreen = document.getElementById('boot-screen');
+            if (bootScreen) {
+                bootScreen.classList.add('hidden');
+            }
+            const desktop = document.getElementById('desktop');
+            const topBar = document.getElementById('top-bar');
+            const startMenuUser = document.getElementById('start-menu-user');
+            if (desktop) desktop.classList.remove('hidden');
+            if (topBar) topBar.classList.remove('hidden');
+            if (startMenuUser) {
+                const names = {
+                    bambino: '👦 Bambino',
+                    adulto: '👤 Utente',
+                    anziano: '👴 Nonno'
+                };
+                startMenuUser.textContent = names[this.state.profile] || '👤 Utente';
+            }
+            this.applySettings();
+            this.createDesktopIcons();
+            this.initWeatherWidget();
+            this.initParallax();
+            this.initClockWidget();
+            setTimeout(() => {
+                this.showTutorMessage('Ciao! Benvenuto nel WebOSx! Sono il tuo Tutor AI. Clicca su "Guida" per iniziare un tour, oppure esplora pure le app!');
+            }, 1000);
+            if (this.state.userMode === 'anziano') {
+                const voiceBtn = document.getElementById('voice-btn');
+                if (voiceBtn) voiceBtn.classList.remove('hidden');
+            }
+        } catch (e) {
+            console.error('[webosx] boot error', e);
+            const bootScreen = document.getElementById('boot-screen');
+            if (bootScreen) bootScreen.classList.add('hidden');
+            const desktop = document.getElementById('desktop');
+            if (desktop) desktop.classList.remove('hidden');
+            const topBar = document.getElementById('top-bar');
+            if (topBar) topBar.classList.remove('hidden');
         }
     }
 
