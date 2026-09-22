@@ -927,7 +927,8 @@ class WebOSApp {
         const effectiveWidth = isMobile ? window.innerWidth * 0.95 : defaultWidth;
         const effectiveHeight = isMobile ? window.innerHeight * 0.80 : defaultHeight;
         const maxX = Math.max(0, window.innerWidth - effectiveWidth - 10);
-        const maxY = Math.max(0, window.innerHeight - effectiveHeight - 48);
+        const bottomPadding = isMobile ? 160 : 48;
+        const maxY = Math.max(0, window.innerHeight - effectiveHeight - bottomPadding);
         const x = Math.min(50 + (this.state.openWindows.length * 30), maxX);
         const y = Math.min(50 + (this.state.openWindows.length * 30), maxY);
         const windowData = {
