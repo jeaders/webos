@@ -142,6 +142,12 @@
                 </svg>
                 <span class="dock-indicator" data-app="notepad"></span>
             </button>
+            <button class="dock-item" data-app="app-store" onclick="app.openApp('app-store')" title="App Store">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 2.3c-.6.6-.2 1.7.7 1.7H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+                </svg>
+                <span class="dock-indicator" data-app="app-store"></span>
+            </button>
         </div>
     </div>
 
@@ -260,6 +266,14 @@
                     </svg>
                 </span>
                 <span>Musica</span>
+            </button>
+            <button class="start-menu-item" onclick="app.openApp('app-store')">
+                <span class="start-menu-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.3 2.3c-.6.6-.2 1.7.7 1.7H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+                    </svg>
+                </span>
+                <span>App Store</span>
             </button>
             <button class="start-menu-item" onclick="app.openApp('calculator')">
                 <span class="start-menu-icon">

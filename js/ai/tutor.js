@@ -191,7 +191,7 @@ class TutorAI {
         return [
             {
                 title: 'Benvenuto!',
-                text: 'Ciao! Sono il tuo Tutor AI. Ti guiderò alla scoperta di questo computer virtuale. Non worries: qui non si rompe niente!',
+                text: 'Ciao! Sono il tuo Tutor AI. Ti guiderò alla scoperta di questo computer virtuale. Qui è tutto sicuro: provare non costa niente!',
                 target: null,
             },
             {
@@ -263,7 +263,32 @@ class TutorAI {
                 title: 'Pronto!',
                 text: 'Perfetto! Ora sai le basi. Esplora le app, chiedimi qualsiasi cosa. Ricorda: qui è tutto virtuale, quindi sperimenta pure senza paura!',
                 target: null,
-            }
+            },
+            {
+                title: 'Sicurezza online',
+                text: 'Quando navighi, non condividere dati personali e non scaricare file sconosciuti. Se qualcosa ti sembra strano, chiudi la pagina e chiedi aiuto a un adulto.',
+                target: null,
+            },
+            {
+                title: 'Organizzazione dei file',
+                text: 'Per lavorare meglio, crea cartelle chiare come "Scuola", "Foto" o "Musica". Sposta i file nelle cartelle giuste: cosí trovi tutto subito.',
+                target: null,
+            },
+            {
+                title: 'Backup dei dati',
+                text: 'Anche se qui è tutto virtuale, puoi esercitarti a copiare i file importanti in una cartella chiamata "Backup". È una buona abitudine da tenere anche sul computer vero.',
+                target: null,
+            },
+            {
+                title: 'Uso responsabile',
+                text: 'Impara a gestire il tempo: alterna studio, riposo e gioco. Se ti affatichi, cambia app, fai una pausa e poi continua con calma.',
+                target: null,
+            },
+            {
+                title: 'Esplora e ripeti',
+                text: 'Ora che hai visto le basi, torna sulle app che ti sono piaciute di meno e ripeti i passaggi. La pratica rende più sicuri.',
+                target: null,
+            },
         ];
     }
 }

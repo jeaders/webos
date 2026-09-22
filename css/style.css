@@ -25,6 +25,46 @@
     --dock-height: 64px;
 }
 
+[data-theme="dark"] {
+    --jeados-bg: rgba(30,41,59,0.92);
+    --jeados-bg-solid: #1e293b;
+    --jeados-text: #f1f5f9;
+    --jeados-text-secondary: #94a3b8;
+    --jeados-border: rgba(255,255,255,0.08);
+    --jeados-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    --jeados-shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+[data-theme="zorin-blue"] {
+    --jeados-bg: rgba(15,30,50,0.92);
+    --jeados-bg-solid: #0f1e32;
+    --jeados-text: #e0eaff;
+    --jeados-text-secondary: #7d9ec9;
+    --jeados-border: rgba(59,130,246,0.2);
+    --jeados-shadow: 0 10px 40px rgba(59,130,246,0.2);
+    --jeados-shadow-sm: 0 2px 8px rgba(59,130,246,0.1);
+}
+
+[data-theme="aurora"] {
+    --jeados-bg: rgba(10,20,30,0.92);
+    --jeados-bg-solid: #0a141e;
+    --jeados-text: #c8ffe0;
+    --jeados-text-secondary: #48c78e;
+    --jeados-border: rgba(72,199,142,0.2);
+    --jeados-shadow: 0 10px 40px rgba(72,199,142,0.15);
+    --jeados-shadow-sm: 0 2px 8px rgba(72,199,142,0.08);
+}
+
+[data-theme="matrix"] {
+    --jeados-bg: rgba(0,8,0,0.95);
+    --jeados-bg-solid: #000800;
+    --jeados-text: #00ff41;
+    --jeados-text-secondary: #008f11;
+    --jeados-border: rgba(0,255,65,0.15);
+    --jeados-shadow: 0 10px 40px rgba(0,255,65,0.12);
+    --jeados-shadow-sm: 0 2px 8px rgba(0,255,65,0.06);
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
@@ -3520,6 +3560,194 @@ body {
     border: none;
 }
 
+/* ===== App: App Store ===== */
+.appstore-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 12px;
+    padding: 16px;
+}
+
+.appstore-header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--jeados-border);
+}
+
+.appstore-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.appstore-icon {
+    font-size: 32px;
+}
+
+.appstore-header h2 {
+    font-size: 20px;
+    color: var(--jeados-text);
+    font-weight: 700;
+}
+
+.appstore-search-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--jeados-border);
+    border-radius: var(--jeados-radius-sm);
+    color: var(--jeados-text-secondary);
+}
+
+.appstore-search {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    background: transparent;
+    color: var(--jeados-text);
+}
+
+.appstore-search::placeholder {
+    color: var(--jeados-text-secondary);
+    opacity: 0.7;
+}
+
+.appstore-categories {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.appstore-cat-btn {
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--jeados-border);
+    padding: 7px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--jeados-text);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.appstore-cat-btn:hover,
+.appstore-cat-btn.active {
+    background: var(--jeados-primary);
+    color: white;
+    border-color: var(--jeados-primary);
+}
+
+.appstore-grid {
+    flex: 1;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    padding: 4px;
+}
+
+.appstore-card {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--jeados-border);
+    border-radius: var(--jeados-radius-sm);
+    transition: all 0.2s ease;
+    align-items: flex-start;
+}
+
+.appstore-card:hover {
+    background: rgba(255,255,255,0.7);
+    box-shadow: var(--jeados-shadow-sm);
+    transform: translateY(-2px);
+}
+
+.appstore-card-icon {
+    font-size: 36px;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.5);
+    border-radius: var(--jeados-radius-sm);
+}
+
+.appstore-card-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.appstore-card-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--jeados-text);
+    line-height: 1.3;
+}
+
+.appstore-card-desc {
+    font-size: 12px;
+    color: var(--jeados-text-secondary);
+    line-height: 1.4;
+}
+
+.appstore-btn {
+    margin-top: 6px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    width: fit-content;
+    min-height: 36px;
+}
+
+.appstore-btn-install {
+    background: var(--jeados-primary);
+    color: white;
+}
+
+.appstore-btn-install:hover {
+    background: var(--jeados-primary-dark);
+    transform: translateY(-1px);
+}
+
+.appstore-btn-uninstall {
+    background: transparent;
+    color: var(--jeados-danger);
+    border: 1px solid var(--jeados-danger);
+}
+
+.appstore-btn-uninstall:hover {
+    background: var(--jeados-danger);
+    color: white;
+}
+
+.appstore-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: var(--jeados-text-secondary);
+    font-size: 14px;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
     .desktop-icons {
@@ -3529,6 +3757,8 @@ body {
     .desktop-icon {
         width: 68px;
         padding: 8px;
+        min-height: 44px;
+        min-width: 44px;
     }
 
     .desktop-icon .icon-img {
@@ -3546,6 +3776,35 @@ body {
     .window {
         min-width: 280px;
         min-height: 180px;
+        max-width: 95vw;
+        max-height: 85vh;
+    }
+
+    .window-container {
+        overflow: hidden;
+    }
+
+    .window-titlebar {
+        padding: 12px 14px;
+        min-height: 44px;
+    }
+
+    .window-control {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        min-height: 28px;
+        font-size: 14px;
+        color: transparent;
+    }
+
+    .window-control:hover {
+        color: rgba(0,0,0,0.7);
+    }
+
+    .window-content {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .boot-title {
@@ -3557,13 +3816,15 @@ body {
     }
 
     .dock-item {
-        width: 42px;
-        height: 42px;
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
     }
 
     .dock-item svg {
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
     }
 
     .activities-window-thumb {
@@ -3578,6 +3839,7 @@ body {
     .workspace-item {
         height: 60px;
         font-size: 14px;
+        min-height: 44px;
     }
 
     .calculator-wrapper {
@@ -3591,6 +3853,11 @@ body {
         flex-wrap: wrap;
     }
 
+    .calc-btn {
+        min-height: 44px;
+        padding: 14px 8px;
+    }
+
     .weather-widget {
         width: 160px;
         padding: 10px;
@@ -3602,6 +3869,11 @@ body {
 
     .weather-widget-icon {
         font-size: 28px;
+    }
+
+    .weather-refresh-btn {
+        min-width: 36px;
+        min-height: 36px;
     }
 
     .clock-widget {
@@ -3627,6 +3899,7 @@ body {
 
     .terminal-input {
         font-size: 11px;
+        min-height: 44px;
     }
 
     .terminal-body {
@@ -3648,8 +3921,16 @@ body {
     }
 
     .task-kill-btn {
-        padding: 3px 6px;
-        font-size: 10px;
+        padding: 6px 10px;
+        font-size: 11px;
+        min-height: 36px;
+    }
+
+    .task-manager-refresh-btn {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
     }
 
     .notification-center {
@@ -3657,8 +3938,28 @@ body {
         right: 4vw;
     }
 
+    .notification-center-clear {
+        min-height: 36px;
+        padding: 6px 12px;
+    }
+
     .launcher-panel {
         width: 95vw;
+    }
+
+    .launcher-input {
+        font-size: 16px;
+        min-height: 44px;
+    }
+
+    .launcher-category-btn {
+        min-height: 36px;
+        padding: 8px 14px;
+    }
+
+    .launcher-result-item {
+        min-height: 44px;
+        padding: 12px;
     }
 
     .music-wrapper {
@@ -3674,8 +3975,132 @@ body {
         height: 50px;
     }
 
+    .music-btn {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .music-btn-play {
+        width: 52px;
+        height: 52px;
+        min-width: 52px;
+        min-height: 52px;
+    }
+
     .gallery-grid {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+
+    .gallery-item-delete {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+    }
+
+    .gallery-upload-btn {
+        min-height: 44px;
+        padding: 10px 16px;
+    }
+
+    .file-manager-btn {
+        min-height: 40px;
+        padding: 8px 14px;
+    }
+
+    .fm-view-btn {
+        min-width: 40px;
+        min-height: 40px;
+    }
+
+    .notepad-btn {
+        min-height: 40px;
+        padding: 8px 12px;
+    }
+
+    .settings-btn {
+        min-height: 40px;
+        padding: 8px 14px;
+    }
+
+    .start-menu-item {
+        min-height: 44px;
+        padding: 12px;
+    }
+
+    .profile-btn {
+        min-height: 80px;
+        min-width: 100px;
+    }
+
+    .shutdown-btn {
+        min-height: 48px;
+        padding: 14px 32px;
+    }
+
+    .toast {
+        min-width: 280px;
+        max-width: 92vw;
+    }
+
+    .tutor-suggestion {
+        min-height: 36px;
+        padding: 8px 14px;
+    }
+
+    .tutor-send {
+        min-height: 44px;
+        padding: 10px 20px;
+    }
+
+    .tutor-input {
+        min-height: 44px;
+    }
+
+    .guide-btn {
+        min-height: 44px;
+        padding: 10px 20px;
+    }
+
+    .browser-btn {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+    }
+
+    .context-menu-item {
+        min-height: 40px;
+        padding: 10px 14px;
+    }
+
+    .top-bar-icon-btn {
+        min-width: 40px;
+        min-height: 40px;
+        padding: 6px 8px;
+    }
+
+    .activities-btn {
+        min-height: 40px;
+        padding: 6px 12px;
+    }
+
+    .appstore-wrapper {
+        padding: 12px;
+    }
+
+    .appstore-card {
+        min-height: 80px;
+    }
+
+    .appstore-btn {
+        min-height: 40px;
+    }
+
+    .appstore-cat-btn {
+        min-height: 36px;
     }
 }
 
@@ -3705,4 +4130,61 @@ body.high-contrast .window-titlebar {
 *:focus-visible {
     outline: 2px solid var(--jeados-primary);
     outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+    .window {
+        max-width: 98vw;
+        max-height: 90vh;
+        min-width: 260px;
+    }
+
+    .window-control {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        min-height: 32px;
+    }
+
+    .dock {
+        padding: 4px 8px;
+        gap: 2px;
+    }
+
+    .dock-item {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+    }
+
+    .start-menu {
+        width: 95vw;
+        left: 2.5vw;
+    }
+
+    .launcher-panel {
+        width: 98vw;
+        max-width: 98vw;
+    }
+
+    .appstore-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .calculator-wrapper {
+        flex-direction: column;
+    }
+
+    .calc-history-panel {
+        max-height: 80px;
+    }
+
+    .music-wrapper {
+        flex-direction: column;
+    }
+
+    .music-sidebar {
+        max-height: 100px;
+    }
 }

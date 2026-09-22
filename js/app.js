@@ -64,6 +64,7 @@ class WebOSApp {
             { id: 'calculator', name: 'Calcolatrice', icon: '🧮', description: 'Fai calcoli veloci' },
             { id: 'gallery', name: 'Galleria', icon: '🖼️', description: 'Guarda le tue immagini' },
             { id: 'music', name: 'Musica', icon: '🎵', description: 'Ascolta la tua musica' },
+            { id: 'app-store', name: 'App Store', icon: '🏪', description: 'Scopri nuove app' },
         ];
 
         this.wallpapers = {
@@ -76,6 +77,67 @@ class WebOSApp {
             ocean: 'ocean',
             matrix: 'matrix',
         };
+
+        this.themes = {
+            light: {
+                name: 'Chiaro',
+                '--jeados-bg': 'rgba(255,255,255,0.85)',
+                '--jeados-bg-solid': '#f8fafc',
+                '--jeados-text': '#1e293b',
+                '--jeados-text-secondary': '#64748b',
+                '--jeados-border': 'rgba(0,0,0,0.08)',
+                '--jeados-shadow': '0 10px 40px rgba(0,0,0,0.15)',
+                '--jeados-shadow-sm': '0 2px 8px rgba(0,0,0,0.08)',
+            },
+            dark: {
+                name: 'Scuro',
+                '--jeados-bg': 'rgba(30,41,59,0.92)',
+                '--jeados-bg-solid': '#1e293b',
+                '--jeados-text': '#f1f5f9',
+                '--jeados-text-secondary': '#94a3b8',
+                '--jeados-border': 'rgba(255,255,255,0.08)',
+                '--jeados-shadow': '0 10px 40px rgba(0,0,0,0.4)',
+                '--jeados-shadow-sm': '0 2px 8px rgba(0,0,0,0.3)',
+            },
+            'zorin-blue': {
+                name: 'Zorin Blue',
+                '--jeados-bg': 'rgba(15,30,50,0.92)',
+                '--jeados-bg-solid': '#0f1e32',
+                '--jeados-text': '#e0eaff',
+                '--jeados-text-secondary': '#7d9ec9',
+                '--jeados-border': 'rgba(59,130,246,0.2)',
+                '--jeados-shadow': '0 10px 40px rgba(59,130,246,0.2)',
+                '--jeados-shadow-sm': '0 2px 8px rgba(59,130,246,0.1)',
+            },
+            aurora: {
+                name: 'Aurora',
+                '--jeados-bg': 'rgba(10,20,30,0.92)',
+                '--jeados-bg-solid': '#0a141e',
+                '--jeados-text': '#c8ffe0',
+                '--jeados-text-secondary': '#48c78e',
+                '--jeados-border': 'rgba(72,199,142,0.2)',
+                '--jeados-shadow': '0 10px 40px rgba(72,199,142,0.15)',
+                '--jeados-shadow-sm': '0 2px 8px rgba(72,199,142,0.08)',
+            },
+            matrix: {
+                name: 'Matrix',
+                '--jeados-bg': 'rgba(0,8,0,0.95)',
+                '--jeados-bg-solid': '#000800',
+                '--jeados-text': '#00ff41',
+                '--jeados-text-secondary': '#008f11',
+                '--jeados-border': 'rgba(0,255,65,0.15)',
+                '--jeados-shadow': '0 10px 40px rgba(0,255,65,0.12)',
+                '--jeados-shadow-sm': '0 2px 8px rgba(0,255,65,0.06)',
+            },
+        };
+
+        this.installedApps = new Set();
+        try {
+            const savedInstalled = localStorage.getItem('webos_installed_apps');
+            if (savedInstalled) this.installedApps = new Set(JSON.parse(savedInstalled));
+        } catch (e) { this.installedApps = new Set(); }
+
+        this.state.theme = localStorage.getItem('webos_theme') || 'light';
 
         this.tutorAI = new TutorAI();
         this.init();
@@ -358,6 +420,7 @@ class WebOSApp {
                 icon.classList.add(`size-${this.state.iconSize}`);
             }
         });
+        this.applyTheme(this.state.theme);
         if (this.state.userMode === 'bambino') {
             document.body.style.fontSize = '16px';
         } else if (this.state.userMode === 'anziano') {
@@ -366,6 +429,27 @@ class WebOSApp {
         } else {
             document.body.style.fontSize = '14px';
         }
+    }
+
+    applyTheme(themeName) {
+        this.state.theme = themeName;
+        localStorage.setItem('webos_theme', themeName);
+        const theme = this.themes[themeName] || this.themes.light;
+        document.body.dataset.theme = themeName;
+        Object.entries(theme).forEach(([key, value]) => {
+            if (key.startsWith('--')) {
+                document.documentElement.style.setProperty(key, value);
+            }
+        });
+        this.showToast('Tema cambiato', `Tema: "${theme.name}".`, 'success');
+        this.addNotification('Tema', `Tema cambiato in "${theme.name}".`, 'info');
+    }
+
+    getThemeOptionsHTML() {
+        return Object.entries(this.themes).map(([key, t]) => `
+            <button class="settings-btn ${this.state.theme === key ? 'active' : ''}"
+                    onclick="app.applyTheme('${key}')">${t.name}</button>
+        `).join('');
     }
 
     // ===== Desktop =====
@@ -803,15 +887,26 @@ class WebOSApp {
             return;
         }
         const windowId = `window-${Date.now()}`;
+        const isMobile = window.innerWidth <= 768;
+        const defaultWidth = appId === 'tutor' ? 400 : appId === 'notepad' ? 550 : appId === 'terminal' ? 700 : appId === 'task-manager' ? 600 : appId === 'gallery' ? 700 : appId === 'music' ? 750 : 600;
+        const defaultHeight = appId === 'tutor' ? 500 : appId === 'notepad' ? 500 : appId === 'terminal' ? 450 : appId === 'task-manager' ? 500 : appId === 'gallery' ? 500 : appId === 'music' ? 500 : 450;
+        const winWidth = isMobile ? '95vw' : defaultWidth + 'px';
+        const winHeight = isMobile ? '80vh' : defaultHeight + 'px';
+        const effectiveWidth = isMobile ? window.innerWidth * 0.95 : defaultWidth;
+        const effectiveHeight = isMobile ? window.innerHeight * 0.80 : defaultHeight;
+        const maxX = Math.max(0, window.innerWidth - effectiveWidth - 10);
+        const maxY = Math.max(0, window.innerHeight - effectiveHeight - 48);
+        const x = Math.min(50 + (this.state.openWindows.length * 30), maxX);
+        const y = Math.min(50 + (this.state.openWindows.length * 30), maxY);
         const windowData = {
             id: windowId,
             appId: appId,
             title: appConfig.name,
             icon: appConfig.icon,
-            x: 50 + (this.state.openWindows.length * 30),
-            y: 50 + (this.state.openWindows.length * 30),
-            width: appId === 'tutor' ? 400 : appId === 'notepad' ? 550 : appId === 'terminal' ? 700 : appId === 'task-manager' ? 600 : appId === 'gallery' ? 700 : appId === 'music' ? 750 : 600,
-            height: appId === 'tutor' ? 500 : appId === 'notepad' ? 500 : appId === 'terminal' ? 450 : appId === 'task-manager' ? 500 : appId === 'gallery' ? 500 : appId === 'music' ? 500 : 450,
+            x: x,
+            y: y,
+            width: winWidth,
+            height: winHeight,
             minimized: false,
             maximized: false,
             prevX: null,
@@ -834,8 +929,10 @@ class WebOSApp {
         win.id = windowData.id;
         win.style.left = windowData.x + 'px';
         win.style.top = windowData.y + 'px';
-        win.style.width = windowData.width + 'px';
-        win.style.height = windowData.height + 'px';
+        const w = String(windowData.width);
+        const h = String(windowData.height);
+        win.style.width = w.includes('vw') || w.includes('vh') || w.includes('%') ? w : w + 'px';
+        win.style.height = h.includes('vw') || h.includes('vh') || h.includes('%') ? h : h + 'px';
         win.style.zIndex = ++this.state.windowZIndex;
         win.style.animation = 'windowOpen 0.2s ease';
         win.innerHTML = `
@@ -888,6 +985,8 @@ class WebOSApp {
                 return this.getGalleryContent(windowId);
             case 'music':
                 return this.getMusicContent(windowId);
+            case 'app-store':
+                return this.getAppStoreContent(windowId);
             default:
                 return '<p>App in caricamento...</p>';
         }
@@ -1205,6 +1304,15 @@ class WebOSApp {
             } else if (e.key === 'Tab') {
                 e.preventDefault();
                 this.terminalTabComplete(windowId, input.value);
+            } else if (e.ctrlKey && e.key === 'c') {
+                e.preventDefault();
+                input.value = '';
+                this.terminalPrint(windowId, '^C', 'command');
+                ts.cancelled = false;
+            } else if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                const out = document.getElementById(`terminal-output-${windowId}`);
+                if (out) out.innerHTML = '';
             }
         });
 
@@ -1260,9 +1368,195 @@ class WebOSApp {
                     ['neofetch', 'Mostra informazioni di sistema'],
                     ['rm <nome>', 'Elimina un file o cartella'],
                     ['history', 'Mostra la cronologia comandi'],
+                    ['calc <espressione>', 'Calcola un\'espressione matematica'],
+                    ['weather', 'Mostra informazioni meteo simulate'],
+                    ['theme <nome>', 'Cambia tema (light/dark/zorin-blue/aurora/matrix)'],
+                    ['apps', 'Lista le app installate'],
+                    ['open <app>', 'Apre un\'applicazione'],
+                    ['screenshot', 'Simula uno screenshot'],
+                    ['reboot', 'Riavvia il sistema'],
+                    ['shutdown', 'Spegne il sistema'],
+                    ['sudo <cmd>', 'Esegui comando come amministratore'],
+                    ['cowsay <testo>', 'Una mucca che parla!'],
+                    ['matrix', 'Mostra effetto Matrix nel terminale'],
                 ];
-                cmds.forEach(([c, d]) => this.terminalPrint(windowId, `  ${c.padEnd(20)} ${d}`, 'output'));
+                cmds.forEach(([c, d]) => this.terminalPrint(windowId, `  ${c.padEnd(22)} ${d}`, 'output'));
                 break;
+
+            case 'calc': {
+                const expr = args.join(' ');
+                if (!expr) {
+                    this.terminalPrint(windowId, 'Uso: calc <espressione>', 'output');
+                    this.terminalPrint(windowId, 'Esempio: calc 2 + 2', 'output');
+                    break;
+                }
+                try {
+                    const sanitized = expr.replace(/[^0-9+\-*/.() ]/g, '');
+                    const result = Function('"use strict"; return (' + sanitized + ')')();
+                    if (typeof result === 'number' && isFinite(result)) {
+                        this.terminalPrint(windowId, `${expr} = ${Math.round(result * 1000000) / 1000000}`, 'output');
+                    } else {
+                        this.terminalPrint(windowId, 'Errore: risultato non valido', 'error');
+                    }
+                } catch (e) {
+                    this.terminalPrint(windowId, 'Errore: espressione non valida', 'error');
+                }
+                break;
+            }
+
+            case 'weather':
+                this.terminalPrint(windowId, '🌤️  Meteo simulato:', 'output');
+                const weatherData = this.generateWeatherData();
+                this.terminalPrint(windowId, `  Citta: ${weatherData.city}, ${weatherData.country}`, 'info');
+                this.terminalPrint(windowId, `  Condizione: ${weatherData.condition} ${weatherData.icon}`, 'info');
+                this.terminalPrint(windowId, `  Temperatura: ${weatherData.temp}°C`, 'info');
+                this.terminalPrint(windowId, `  Umidita: ${weatherData.humidity}%`, 'info');
+                this.terminalPrint(windowId, `  Vento: ${weatherData.wind} km/h`, 'info');
+                this.terminalPrint(windowId, '  Previsione:', 'info');
+                weatherData.forecast.forEach(d => {
+                    this.terminalPrint(windowId, `    ${d.day}: ${d.icon} ${d.tempHigh}° / ${d.tempLow}°`, 'info');
+                });
+                break;
+
+            case 'theme': {
+                const themeName = args[0] ? args[0].toLowerCase() : '';
+                const validThemes = Object.keys(this.themes);
+                if (!themeName || !validThemes.includes(themeName)) {
+                    this.terminalPrint(windowId, 'Temi disponibili: ' + validThemes.join(', '), 'output');
+                    this.terminalPrint(windowId, 'Uso: theme <nome>', 'output');
+                } else {
+                    this.applyTheme(themeName);
+                    this.terminalPrint(windowId, `Tema cambiato in: ${this.themes[themeName].name}`, 'output');
+                }
+                break;
+            }
+
+            case 'apps':
+                this.terminalPrint(windowId, 'Applicazioni installate:', 'output');
+                this.installedApps.forEach(appId => {
+                    const app = this.desktopApps.find(a => a.id === appId);
+                    const name = app ? app.name : appId;
+                    this.terminalPrint(windowId, `  ${app ? app.icon : '📦'} ${name}`, 'info');
+                });
+                if (this.installedApps.size === 0) {
+                    this.terminalPrint(windowId, '  (nessuna app installata)', 'output');
+                }
+                break;
+
+            case 'open': {
+                const appName = args.join(' ');
+                if (!appName) {
+                    this.terminalPrint(windowId, 'Uso: open <nome-app>', 'output');
+                    break;
+                }
+                const matched = this.desktopApps.find(a => a.name.toLowerCase().includes(appName.toLowerCase()) || a.id === appName.toLowerCase());
+                if (matched) {
+                    this.openApp(matched.id);
+                    this.terminalPrint(windowId, `Apertura di "${matched.name}"...`, 'output');
+                } else {
+                    this.terminalPrint(windowId, `App "${appName}" non trovata.`, 'error');
+                }
+                break;
+            }
+
+            case 'screenshot':
+                this.terminalPrint(windowId, '📸 Screenshot simulato!', 'output');
+                this.terminalPrint(windowId, '  (In un sistema reale, questo salverebbe un\'immagine dello schermo)', 'info');
+                this.playSound('success');
+                this.showToast('Screenshot', 'Screenshot simulato con successo!', 'success');
+                break;
+
+            case 'reboot': {
+                this.terminalPrint(windowId, '🔄 Riavvio in corso...', 'welcome');
+                const bootScreen = document.getElementById('boot-screen');
+                if (bootScreen) {
+                    bootScreen.classList.remove('hidden', 'fade-out');
+                    document.getElementById('desktop').classList.add('hidden');
+                    document.getElementById('top-bar').classList.add('hidden');
+                    document.getElementById('dock').classList.add('hidden');
+                    const progressBar = document.getElementById('boot-progress-bar');
+                    if (progressBar) progressBar.style.width = '0%';
+                    let progress = 0;
+                    const bootInterval = setInterval(() => {
+                        progress += Math.random() * 30;
+                        if (progress > 100) progress = 100;
+                        if (progressBar) progressBar.style.width = progress + '%';
+                        if (progress >= 100) {
+                            clearInterval(bootInterval);
+                            setTimeout(() => {
+                                bootScreen.classList.add('fade-out');
+                                setTimeout(() => {
+                                    bootScreen.classList.add('hidden');
+                                    document.getElementById('desktop').classList.remove('hidden');
+                                    document.getElementById('top-bar').classList.remove('hidden');
+                                    document.getElementById('dock').classList.remove('hidden');
+                                }, 800);
+                            }, 300);
+                        }
+                    }, 200);
+                }
+                this.state.openWindows = [];
+                this.updateTaskbarApps();
+                break;
+            }
+
+            case 'shutdown':
+                this.terminalPrint(windowId, '⏻ Spegnimento...', 'welcome');
+                this.shutdown();
+                break;
+
+            case 'sudo': {
+                const sudoCmd = args.join(' ');
+                if (!sudoCmd) {
+                    this.terminalPrint(windowId, 'Uso: sudo <comando>', 'output');
+                    this.terminalPrint(windowId, 'Password: admin', 'output');
+                    break;
+                }
+                const lastCmd = ts.history.filter(h => h.trim()).pop() || '';
+                if (lastCmd === 'admin' || sudoCmd === 'admin') {
+                    this.terminalPrint(windowId, `[sudo] Esecuzione: ${sudoCmd}`, 'welcome');
+                    this.terminalExecute(windowId, sudoCmd);
+                } else {
+                    this.terminalPrint(windowId, '[sudo] Password: ', 'output');
+                    this.terminalPrint(windowId, 'sudo: autenticazione fallita: password non riconosciuta', 'error');
+                    this.terminalPrint(windowId, 'Suggerimento: digita "admin" come comando dopo sudo', 'info');
+                }
+                break;
+            }
+
+            case 'cowsay': {
+                const cowText = args.join(' ') || 'Muuu!';
+                const border = '─'.repeat(cowText.length + 2);
+                this.terminalPrint(windowId, ` ${border}`, 'ascii');
+                this.terminalPrint(windowId, `< ${cowText} >`, 'ascii');
+                this.terminalPrint(windowId, ` ${border}`, 'ascii');
+                this.terminalPrint(windowId, '        \\   ^__^', 'ascii');
+                this.terminalPrint(windowId, '         \\  (oo)\\_______', 'ascii');
+                this.terminalPrint(windowId, '            (__)\\       )\\/\\', 'ascii');
+                this.terminalPrint(windowId, '                ||----w |', 'ascii');
+                this.terminalPrint(windowId, '                ||     ||', 'ascii');
+                break;
+            }
+
+            case 'matrix': {
+                const chars = 'ｱｲｳｴｵｶｷｸｹｺ0123456789ABCDEF@#$%&*';
+                let matrixLine = '';
+                for (let i = 0; i < 40; i++) {
+                    matrixLine += chars[Math.floor(Math.random() * chars.length)];
+                }
+                this.terminalPrint(windowId, matrixLine, 'ascii');
+                this.terminalPrint(windowId, '░▒▓█  ENTER THE MATRIX █▓▒░', 'welcome');
+                const matrixLines = [];
+                for (let i = 0; i < 5; i++) {
+                    let line = '';
+                    for (let j = 0; j < 50; j++) {
+                        line += Math.random() > 0.5 ? String.fromCharCode(0x30A0 + Math.random() * 96) : ' ';
+                    }
+                    matrixLines.push(line);
+                }
+                matrixLines.forEach(l => this.terminalPrint(windowId, l, 'ascii'));
+                break;
+            }
 
             case 'ls': {
                 const folder = this.getFolderByPath(ts.cwd);
@@ -1425,7 +1719,7 @@ class WebOSApp {
 
         let matches = [];
         if (isCommand) {
-            const commands = ['help', 'ls', 'cd', 'pwd', 'mkdir', 'touch', 'cat', 'echo', 'clear', 'whoami', 'date', 'neofetch', 'rm', 'history'];
+            const commands = ['help', 'ls', 'cd', 'pwd', 'mkdir', 'touch', 'cat', 'echo', 'clear', 'whoami', 'date', 'neofetch', 'rm', 'history', 'calc', 'weather', 'theme', 'apps', 'open', 'screenshot', 'reboot', 'shutdown', 'sudo', 'cowsay', 'matrix'];
             matches = commands.filter(c => c.startsWith(lastPart));
         } else if (folder && folder.children) {
             matches = Object.keys(folder.children).filter(name => name.startsWith(lastPart));
@@ -1779,6 +2073,9 @@ class WebOSApp {
                 break;
             case 'music':
                 this.initMusic(windowId);
+                break;
+            case 'app-store':
+                this.initAppStore(windowId);
                 break;
         }
     }
@@ -2897,6 +3194,12 @@ class WebOSApp {
         return `
             <div class="settings-section">
                 <h3>🎨 Aspetto</h3>
+                <div class="settings-option">
+                    <span class="settings-label">Tema</span>
+                    <div class="settings-control">
+                        ${this.getThemeOptionsHTML()}
+                    </div>
+                </div>
                 <div class="settings-option">
                     <span class="settings-label">Sfondo</span>
                     <div class="settings-control">
@@ -4378,6 +4681,173 @@ class WebOSApp {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    getAppStoreContent(windowId) {
+        const categories = [
+            { id: 'all', name: 'Tutte', icon: '📦' },
+            { id: 'education', name: 'Educazione', icon: '📚' },
+            { id: 'productivity', name: 'Produttività', icon: '📋' },
+            { id: 'creative', name: 'Creatività', icon: '🎨' },
+            { id: 'system', name: 'Sistema', icon: '⚙️' },
+            { id: 'entertainment', name: 'Intrattenimento', icon: '🎮' },
+        ];
+        const storeApps = [
+            { id: 'notepad', name: 'Blocco Note', icon: '📝', category: 'productivity', desc: 'Pre-installato', installed: true },
+            { id: 'terminal', name: 'Terminale Avanzato', icon: '💻', category: 'system', desc: 'Pre-installato', installed: true },
+            { id: 'calculator', name: 'Calcolatrice Pro', icon: '🧮', category: 'education', desc: 'Pre-installato', installed: true },
+            { id: 'file-manager', name: 'File Manager', icon: '📁', category: 'productivity', desc: 'Pre-installato', installed: true },
+            { id: 'browser', name: 'Browser Sicuro', icon: '🌐', category: 'system', desc: 'Pre-installato', installed: true },
+            { id: 'task-manager', name: 'Task Manager', icon: '📊', category: 'system', desc: 'Pre-installato', installed: true },
+            { id: 'tutor', name: 'Tutor AI', icon: '🤖', category: 'education', desc: 'Pre-installato', installed: true },
+            { id: 'gallery', name: 'Galleria', icon: '🖼️', category: 'creative', desc: 'Pre-installato', installed: true },
+            { id: 'music', name: 'Player Musicale', icon: '🎵', category: 'entertainment', desc: 'Pre-installato', installed: true },
+            { id: 'games', name: 'Giochi Didattici', icon: '🎮', category: 'entertainment', desc: 'Pre-installato', installed: true },
+            { id: 'settings', name: 'Impostazioni', icon: '⚙️', category: 'system', desc: 'Pre-installato', installed: true },
+            { id: 'guide', name: 'Guida Interattiva', icon: '📖', category: 'education', desc: 'Pre-installato', installed: true },
+            { id: 'calendar', name: 'Calendario', icon: '📅', category: 'productivity', desc: 'Gestisci eventi e promemoria', installed: false },
+            { id: 'draw', name: 'Disegna', icon: '🖌️', category: 'creative', desc: 'Disegna e crea immagini', installed: false },
+            { id: 'clock', name: 'Cronometro', icon: '⏱️', category: 'productivity', desc: 'Misura il tempo con precisione', installed: false },
+            { id: 'learn', name: 'Impara', icon: '📘', category: 'education', desc: 'Lezioni interattive su vari argomenti', installed: false },
+        ];
+        return `
+            <div class="appstore-wrapper" id="appstore-${windowId}">
+                <div class="appstore-header">
+                    <div class="appstore-title-row">
+                        <span class="appstore-icon">🏪</span>
+                        <h2>App Store</h2>
+                    </div>
+                    <div class="appstore-search-wrapper">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" class="appstore-search" id="appstore-search-${windowId}"
+                               placeholder="Cerca app..." oninput="app.appStoreSearch('${windowId}', this.value)">
+                    </div>
+                </div>
+                <div class="appstore-categories" id="appstore-cats-${windowId}">
+                    ${categories.map((c, i) => `
+                        <button class="appstore-cat-btn ${i === 0 ? 'active' : ''}"
+                                data-cat="${c.id}" onclick="app.appStoreSetCat('${windowId}', '${c.id}')">
+                            <span>${c.icon}</span> ${c.name}
+                        </button>
+                    `).join('')}
+                </div>
+                <div class="appstore-grid" id="appstore-grid-${windowId}">
+                    ${this.renderAppStoreCards(windowId, storeApps)}
+                </div>
+            </div>
+        `;
+    }
+
+    renderAppStoreCards(windowId, apps) {
+        if (apps.length === 0) {
+            return '<div class="appstore-empty">Nessuna app trovata</div>';
+        }
+        return apps.map(app => {
+            const isInstalled = this.installedApps.has(app.id) || app.installed;
+            return `
+                <div class="appstore-card" data-app-id="${app.id}">
+                    <div class="appstore-card-icon">${app.icon}</div>
+                    <div class="appstore-card-info">
+                        <div class="appstore-card-name">${app.name}</div>
+                        <div class="appstore-card-desc">${app.desc}</div>
+                        ${isInstalled ? `
+                            <button class="appstore-btn appstore-btn-uninstall"
+                                    onclick="app.appStoreUninstall('${windowId}', '${app.id}')">Disinstalla</button>
+                        ` : `
+                            <button class="appstore-btn appstore-btn-install"
+                                    onclick="app.appStoreInstall('${windowId}', '${app.id}')">Installa</button>
+                        `}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    initAppStore(windowId) {
+        this.appStoreCategories = this.appStoreCategories || {};
+        this.appStoreCategories[windowId] = 'all';
+        this.appStoreSearchQuery = this.appStoreSearchQuery || {};
+        this.appStoreSearchQuery[windowId] = '';
+    }
+
+    appStoreSetCat(windowId, cat) {
+        this.appStoreCategories[windowId] = cat;
+        document.querySelectorAll(`#appstore-cats-${windowId} .appstore-cat-btn`).forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.cat === cat);
+        });
+        this.appStoreFilter(windowId);
+    }
+
+    appStoreSearch(windowId, query) {
+        this.appStoreSearchQuery[windowId] = query.toLowerCase().trim();
+        this.appStoreFilter(windowId);
+    }
+
+    appStoreFilter(windowId) {
+        const cat = this.appStoreCategories[windowId] || 'all';
+        const q = this.appStoreSearchQuery[windowId] || '';
+        const storeApps = [
+            { id: 'notepad', name: 'Blocco Note', icon: '📝', category: 'productivity', desc: 'Pre-installato' },
+            { id: 'terminal', name: 'Terminale Avanzato', icon: '💻', category: 'system', desc: 'Pre-installato' },
+            { id: 'calculator', name: 'Calcolatrice Pro', icon: '🧮', category: 'education', desc: 'Pre-installato' },
+            { id: 'file-manager', name: 'File Manager', icon: '📁', category: 'productivity', desc: 'Pre-installato' },
+            { id: 'browser', name: 'Browser Sicuro', icon: '🌐', category: 'system', desc: 'Pre-installato' },
+            { id: 'task-manager', name: 'Task Manager', icon: '📊', category: 'system', desc: 'Pre-installato' },
+            { id: 'tutor', name: 'Tutor AI', icon: '🤖', category: 'education', desc: 'Pre-installato' },
+            { id: 'gallery', name: 'Galleria', icon: '🖼️', category: 'creative', desc: 'Pre-installato' },
+            { id: 'music', name: 'Player Musicale', icon: '🎵', category: 'entertainment', desc: 'Pre-installato' },
+            { id: 'games', name: 'Giochi Didattici', icon: '🎮', category: 'entertainment', desc: 'Pre-installato' },
+            { id: 'settings', name: 'Impostazioni', icon: '⚙️', category: 'system', desc: 'Pre-installato' },
+            { id: 'guide', name: 'Guida Interattiva', icon: '📖', category: 'education', desc: 'Pre-installato' },
+            { id: 'calendar', name: 'Calendario', icon: '📅', category: 'productivity', desc: 'Gestisci eventi e promemoria' },
+            { id: 'draw', name: 'Disegna', icon: '🖌️', category: 'creative', desc: 'Disegna e crea immagini' },
+            { id: 'clock', name: 'Cronometro', icon: '⏱️', category: 'productivity', desc: 'Misura il tempo con precisione' },
+            { id: 'learn', name: 'Impara', icon: '📘', category: 'education', desc: 'Lezioni interattive su vari argomenti' },
+        ];
+        let filtered = storeApps.filter(app => {
+            const catMatch = cat === 'all' || app.category === cat;
+            const qMatch = !q || app.name.toLowerCase().includes(q) || app.desc.toLowerCase().includes(q);
+            return catMatch && qMatch;
+        });
+        const grid = document.getElementById(`appstore-grid-${windowId}`);
+        if (grid) {
+            grid.innerHTML = this.renderAppStoreCards(windowId, filtered);
+        }
+    }
+
+    appStoreInstall(windowId, appId) {
+        const btn = document.querySelector(`#appstore-${windowId} .appstore-card[data-app-id="${appId}"] .appstore-btn-install`);
+        if (!btn) return;
+        btn.textContent = 'Installazione...';
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 25 + 10;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+                this.installedApps.add(appId);
+                try {
+                    localStorage.setItem('webos_installed_apps', JSON.stringify([...this.installedApps]));
+                } catch (e) {}
+                this.showToast('Installazione completata', `"${appId}" installato con successo!`, 'success');
+                this.appStoreFilter(windowId);
+            } else {
+                btn.textContent = `Installazione ${Math.floor(progress)}%`;
+            }
+        }, 300);
+    }
+
+    appStoreUninstall(windowId, appId) {
+        this.installedApps.delete(appId);
+        try {
+            localStorage.setItem('webos_installed_apps', JSON.stringify([...this.installedApps]));
+        } catch (e) {}
+        this.showToast('Disinstallazione', `"${appId}" disinstallato.`, 'info');
+        this.appStoreFilter(windowId);
     }
 }
 
