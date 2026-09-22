@@ -510,12 +510,12 @@ class WebOSApp {
             icon.addEventListener('click', () => {
                 this.showTutorMessage(`Questa è l'app "${app.name}": ${app.description}. Fai doppio click per aprirla!`);
             });
-            this.makeDraggable(icon);
+            this.makeIconDraggable(icon);
             container.appendChild(icon);
         });
     }
 
-    makeDraggable(element) {
+    makeIconDraggable(element) {
         let isDragging = false;
         let startX = 0;
         let startY = 0;
@@ -523,19 +523,22 @@ class WebOSApp {
         let initialTop = 0;
 
         const onPointerDown = (e) => {
-            if (e.button !== 0 && e.type === 'mousedown') return;
+            if (e.button && e.button !== 0) return;
+            isDragging = false;
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            if (clientX === undefined || clientY === undefined) return;
             isDragging = true;
             element.classList.add('dragging');
             const rect = element.getBoundingClientRect();
             const parentRect = element.parentElement.getBoundingClientRect();
-            startX = e.clientX || e.touches[0].clientX;
-            startY = e.clientY || e.touches[0].clientY;
+            startX = clientX;
+            startY = clientY;
             initialLeft = rect.left - parentRect.left;
             initialTop = rect.top - parentRect.top;
             element.style.position = 'absolute';
             element.style.left = initialLeft + 'px';
             element.style.top = initialTop + 'px';
-            e.preventDefault();
         };
 
         const onPointerMove = (e) => {
@@ -544,8 +547,10 @@ class WebOSApp {
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
             if (clientX === undefined || clientY === undefined) return;
             const parentRect = element.parentElement.getBoundingClientRect();
-            let newX = clientX - parentRect.left - (startX - (initialLeft + parentRect.left));
-            let newY = clientY - parentRect.top - (startY - (initialTop + parentRect.top));
+            const deltaX = clientX - startX;
+            const deltaY = clientY - startY;
+            let newX = initialLeft + deltaX;
+            let newY = initialTop + deltaY;
             newX = Math.max(0, Math.min(newX, parentRect.width - element.offsetWidth));
             newY = Math.max(0, Math.min(newY, parentRect.height - element.offsetHeight));
             element.style.left = newX + 'px';
@@ -562,21 +567,21 @@ class WebOSApp {
                 try {
                     const saved = localStorage.getItem('webos_icon_positions');
                     if (saved) iconPositions = JSON.parse(saved);
-                } catch (e) { iconPositions = {}; }
+                } catch (err) { iconPositions = {}; }
                 iconPositions[appId] = {
                     x: parseInt(element.style.left || 0),
                     top: parseInt(element.style.top || 0)
                 };
                 try {
                     localStorage.setItem('webos_icon_positions', JSON.stringify(iconPositions));
-                } catch (e) {}
+                } catch (err) {}
             }
         };
 
         element.addEventListener('mousedown', onPointerDown);
-        element.addEventListener('touchstart', onPointerDown, { passive: false });
+        element.addEventListener('touchstart', onPointerDown, { passive: true });
         document.addEventListener('mousemove', onPointerMove);
-        document.addEventListener('touchmove', onPointerMove, { passive: false });
+        document.addEventListener('touchmove', onPointerMove, { passive: true });
         document.addEventListener('mouseup', onPointerUp);
         document.addEventListener('touchend', onPointerUp);
     }
