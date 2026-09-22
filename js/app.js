@@ -474,7 +474,6 @@ class WebOSApp {
             }
         });
         this.showToast('Tema cambiato', `Tema: "${theme.name}".`, 'success');
-        this.addNotification('Tema', `Tema cambiato in "${theme.name}".`, 'info');
     }
 
     getThemeOptionsHTML() {
@@ -488,6 +487,11 @@ class WebOSApp {
     createDesktopIcons() {
         const container = document.getElementById('desktop-icons');
         container.innerHTML = '';
+        let iconPositions = {};
+        try {
+            const saved = localStorage.getItem('webos_icon_positions');
+            if (saved) iconPositions = JSON.parse(saved);
+        } catch (e) { iconPositions = {}; }
         this.desktopApps.forEach(app => {
             const icon = document.createElement('div');
             icon.className = `desktop-icon ${this.state.iconSize !== 'medium' ? `size-${this.state.iconSize}` : ''}`;
@@ -496,12 +500,85 @@ class WebOSApp {
                 <div class="icon-img">${app.icon}</div>
                 <div class="icon-label">${app.name}</div>
             `;
+            const pos = iconPositions[app.id];
+            if (pos) {
+                icon.style.left = pos.x + 'px';
+                icon.style.top = pos.top + 'px';
+                icon.style.position = 'absolute';
+            }
             icon.addEventListener('dblclick', () => this.openApp(app.id));
             icon.addEventListener('click', () => {
                 this.showTutorMessage(`Questa è l'app "${app.name}": ${app.description}. Fai doppio click per aprirla!`);
             });
+            this.makeDraggable(icon);
             container.appendChild(icon);
         });
+    }
+
+    makeDraggable(element) {
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let initialLeft = 0;
+        let initialTop = 0;
+
+        const onPointerDown = (e) => {
+            if (e.button !== 0 && e.type === 'mousedown') return;
+            isDragging = true;
+            element.classList.add('dragging');
+            const rect = element.getBoundingClientRect();
+            const parentRect = element.parentElement.getBoundingClientRect();
+            startX = e.clientX || e.touches[0].clientX;
+            startY = e.clientY || e.touches[0].clientY;
+            initialLeft = rect.left - parentRect.left;
+            initialTop = rect.top - parentRect.top;
+            element.style.position = 'absolute';
+            element.style.left = initialLeft + 'px';
+            element.style.top = initialTop + 'px';
+            e.preventDefault();
+        };
+
+        const onPointerMove = (e) => {
+            if (!isDragging) return;
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            if (clientX === undefined || clientY === undefined) return;
+            const parentRect = element.parentElement.getBoundingClientRect();
+            let newX = clientX - parentRect.left - (startX - (initialLeft + parentRect.left));
+            let newY = clientY - parentRect.top - (startY - (initialTop + parentRect.top));
+            newX = Math.max(0, Math.min(newX, parentRect.width - element.offsetWidth));
+            newY = Math.max(0, Math.min(newY, parentRect.height - element.offsetHeight));
+            element.style.left = newX + 'px';
+            element.style.top = newY + 'px';
+        };
+
+        const onPointerUp = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            element.classList.remove('dragging');
+            const appId = element.dataset.app;
+            if (appId) {
+                let iconPositions = {};
+                try {
+                    const saved = localStorage.getItem('webos_icon_positions');
+                    if (saved) iconPositions = JSON.parse(saved);
+                } catch (e) { iconPositions = {}; }
+                iconPositions[appId] = {
+                    x: parseInt(element.style.left || 0),
+                    top: parseInt(element.style.top || 0)
+                };
+                try {
+                    localStorage.setItem('webos_icon_positions', JSON.stringify(iconPositions));
+                } catch (e) {}
+            }
+        };
+
+        element.addEventListener('mousedown', onPointerDown);
+        element.addEventListener('touchstart', onPointerDown, { passive: false });
+        document.addEventListener('mousemove', onPointerMove);
+        document.addEventListener('touchmove', onPointerMove, { passive: false });
+        document.addEventListener('mouseup', onPointerUp);
+        document.addEventListener('touchend', onPointerUp);
     }
 
     // ===== Weather Widget =====
@@ -895,7 +972,6 @@ class WebOSApp {
         }
         if (this.state.startMenuOpen) {
             menu.classList.remove('hidden');
-            this.addNotification('Menu avviato', 'Menu Start aperto.', 'info');
         } else {
             menu.classList.add('hidden');
         }
@@ -1097,7 +1173,6 @@ class WebOSApp {
                 this.stopGallerySlideshow(windowId);
             }
             this.showToast('Chiusa', `"${winData.title}" chiusa.`, 'info', 2000);
-            this.addNotification('Finestra chiusa', `"${winData.title}" è stata chiusa.`, 'info');
         }
     }
 
@@ -3317,7 +3392,6 @@ class WebOSApp {
         localStorage.setItem('webos_wallpaper', wallpaper);
         this.applySettings();
         this.showToast('Sfondo cambiato', `Nuovo sfondo: "${wallpaper}".`, 'success');
-        this.addNotification('Sfondo', `Sfondo cambiato in "${wallpaper}".`, 'info');
         this.showTutorMessage(`Ho cambiato lo sfondo! Ora hai lo sfondo "${wallpaper}". Ti piace?`);
     }
 
@@ -3332,7 +3406,6 @@ class WebOSApp {
         localStorage.setItem('webos_mode', mode);
         this.applySettings();
         this.showToast('Modalità cambiata', `Modalità: "${mode}".`, 'success');
-        this.addNotification('Modalità', `Modalità cambiata in "${mode}".`, 'info');
         this.showTutorMessage(`Modalità cambiata in "${mode}". Ora il sistema si adatta alle tue necessità!`);
     }
 
@@ -3346,7 +3419,6 @@ class WebOSApp {
             localStorage.removeItem('webos_filesystem');
             this.initFilesystem();
             this.showToast('Ripristino', 'File ripristinati ai valori predefiniti.', 'success');
-            this.addNotification('File ripristinati', 'Il filesystem è stato ripristinato ai valori predefiniti.', 'info');
             this.showTutorMessage('Ho ripristinato i file predefiniti.');
         }
     }
@@ -3867,7 +3939,6 @@ class WebOSApp {
         container.appendChild(toast);
         const dismissTimeout = setTimeout(() => this.dismissToast(toast), duration);
         toast.dataset.dismissTimeout = dismissTimeout;
-        this.addNotification(title, message, type);
     }
 
     dismissToast(toast) {
