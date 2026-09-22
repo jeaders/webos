@@ -1,4 +1,4 @@
-// ===== WebOS Educativo - Main Application =====
+// ===== webosx - Main Application =====
 class WebOSApp {
     constructor() {
         this.state = {
@@ -81,53 +81,53 @@ class WebOSApp {
         this.themes = {
             light: {
                 name: 'Chiaro',
-                '--jeados-bg': 'rgba(255,255,255,0.85)',
-                '--jeados-bg-solid': '#f8fafc',
-                '--jeados-text': '#1e293b',
-                '--jeados-text-secondary': '#64748b',
-                '--jeados-border': 'rgba(0,0,0,0.08)',
-                '--jeados-shadow': '0 10px 40px rgba(0,0,0,0.15)',
-                '--jeados-shadow-sm': '0 2px 8px rgba(0,0,0,0.08)',
+                '--webosx-bg': 'rgba(255,255,255,0.85)',
+                '--webosx-bg-solid': '#f8fafc',
+                '--webosx-text': '#1e293b',
+                '--webosx-text-secondary': '#64748b',
+                '--webosx-border': 'rgba(0,0,0,0.08)',
+                '--webosx-shadow': '0 10px 40px rgba(0,0,0,0.15)',
+                '--webosx-shadow-sm': '0 2px 8px rgba(0,0,0,0.08)',
             },
             dark: {
                 name: 'Scuro',
-                '--jeados-bg': 'rgba(30,41,59,0.92)',
-                '--jeados-bg-solid': '#1e293b',
-                '--jeados-text': '#f1f5f9',
-                '--jeados-text-secondary': '#94a3b8',
-                '--jeados-border': 'rgba(255,255,255,0.08)',
-                '--jeados-shadow': '0 10px 40px rgba(0,0,0,0.4)',
-                '--jeados-shadow-sm': '0 2px 8px rgba(0,0,0,0.3)',
+                '--webosx-bg': 'rgba(30,41,59,0.92)',
+                '--webosx-bg-solid': '#1e293b',
+                '--webosx-text': '#f1f5f9',
+                '--webosx-text-secondary': '#94a3b8',
+                '--webosx-border': 'rgba(255,255,255,0.08)',
+                '--webosx-shadow': '0 10px 40px rgba(0,0,0,0.4)',
+                '--webosx-shadow-sm': '0 2px 8px rgba(0,0,0,0.3)',
             },
             'zorin-blue': {
                 name: 'Zorin Blue',
-                '--jeados-bg': 'rgba(15,30,50,0.92)',
-                '--jeados-bg-solid': '#0f1e32',
-                '--jeados-text': '#e0eaff',
-                '--jeados-text-secondary': '#7d9ec9',
-                '--jeados-border': 'rgba(59,130,246,0.2)',
-                '--jeados-shadow': '0 10px 40px rgba(59,130,246,0.2)',
-                '--jeados-shadow-sm': '0 2px 8px rgba(59,130,246,0.1)',
+                '--webosx-bg': 'rgba(15,30,50,0.92)',
+                '--webosx-bg-solid': '#0f1e32',
+                '--webosx-text': '#e0eaff',
+                '--webosx-text-secondary': '#7d9ec9',
+                '--webosx-border': 'rgba(59,130,246,0.2)',
+                '--webosx-shadow': '0 10px 40px rgba(59,130,246,0.2)',
+                '--webosx-shadow-sm': '0 2px 8px rgba(59,130,246,0.1)',
             },
             aurora: {
                 name: 'Aurora',
-                '--jeados-bg': 'rgba(10,20,30,0.92)',
-                '--jeados-bg-solid': '#0a141e',
-                '--jeados-text': '#c8ffe0',
-                '--jeados-text-secondary': '#48c78e',
-                '--jeados-border': 'rgba(72,199,142,0.2)',
-                '--jeados-shadow': '0 10px 40px rgba(72,199,142,0.15)',
-                '--jeados-shadow-sm': '0 2px 8px rgba(72,199,142,0.08)',
+                '--webosx-bg': 'rgba(10,20,30,0.92)',
+                '--webosx-bg-solid': '#0a141e',
+                '--webosx-text': '#c8ffe0',
+                '--webosx-text-secondary': '#48c78e',
+                '--webosx-border': 'rgba(72,199,142,0.2)',
+                '--webosx-shadow': '0 10px 40px rgba(72,199,142,0.15)',
+                '--webosx-shadow-sm': '0 2px 8px rgba(72,199,142,0.08)',
             },
             matrix: {
                 name: 'Matrix',
-                '--jeados-bg': 'rgba(0,8,0,0.95)',
-                '--jeados-bg-solid': '#000800',
-                '--jeados-text': '#00ff41',
-                '--jeados-text-secondary': '#008f11',
-                '--jeados-border': 'rgba(0,255,65,0.15)',
-                '--jeados-shadow': '0 10px 40px rgba(0,255,65,0.12)',
-                '--jeados-shadow-sm': '0 2px 8px rgba(0,255,65,0.06)',
+                '--webosx-bg': 'rgba(0,8,0,0.95)',
+                '--webosx-bg-solid': '#000800',
+                '--webosx-text': '#00ff41',
+                '--webosx-text-secondary': '#008f11',
+                '--webosx-border': 'rgba(0,255,65,0.15)',
+                '--webosx-shadow': '0 10px 40px rgba(0,255,65,0.12)',
+                '--webosx-shadow-sm': '0 2px 8px rgba(0,255,65,0.06)',
             },
         };
 
@@ -332,6 +332,7 @@ class WebOSApp {
         const bootScreen = document.getElementById('boot-screen');
         const progressBar = document.getElementById('boot-progress-bar');
         const profileSelect = document.getElementById('profile-select');
+        if (!bootScreen || !progressBar || !profileSelect) return;
         let progress = 0;
         const interval = setInterval(() => {
             progress += Math.random() * 30;
@@ -352,11 +353,15 @@ class WebOSApp {
         localStorage.setItem('webos_profile', profile);
         localStorage.setItem('webos_mode', profile);
         const bootScreen = document.getElementById('boot-screen');
-        bootScreen.classList.add('fade-out');
-        setTimeout(() => {
-            bootScreen.classList.add('hidden');
+        if (bootScreen) {
+            bootScreen.classList.add('fade-out');
+            setTimeout(() => {
+                bootScreen.classList.add('hidden');
+                this.boot();
+            }, 800);
+        } else {
             this.boot();
-        }, 800);
+        }
         this.addNotification('Accesso effettuato', `Profilo "${profile}" selezionato.`, 'success');
     }
 
@@ -368,24 +373,27 @@ class WebOSApp {
         const desktop = document.getElementById('desktop');
         const taskbar = document.getElementById('taskbar');
         const startMenuUser = document.getElementById('start-menu-user');
-        desktop.classList.remove('hidden');
-        taskbar.classList.remove('hidden');
-        const names = {
-            bambino: '👦 Bambino',
-            adulto: '👤 Utente',
-            anziano: '👴 Nonno'
-        };
-        startMenuUser.textContent = names[this.state.profile] || '👤 Utente';
+        if (desktop) desktop.classList.remove('hidden');
+        if (taskbar) taskbar.classList.remove('hidden');
+        if (startMenuUser) {
+            const names = {
+                bambino: '👦 Bambino',
+                adulto: '👤 Utente',
+                anziano: '👴 Nonno'
+            };
+            startMenuUser.textContent = names[this.state.profile] || '👤 Utente';
+        }
         this.applySettings();
         this.createDesktopIcons();
         this.initWeatherWidget();
         this.initParallax();
         this.initClockWidget();
         setTimeout(() => {
-            this.showTutorMessage('Ciao! Benvenuto nel WebOS Educativo! Sono il tuo Tutor AI. Clicca su "Guida" per iniziare un tour, oppure esplora pure le app!');
+            this.showTutorMessage('Ciao! Benvenuto nel WebOSx! Sono il tuo Tutor AI. Clicca su "Guida" per iniziare un tour, oppure esplora pure le app!');
         }, 1000);
         if (this.state.userMode === 'anziano') {
-            document.getElementById('voice-btn').classList.remove('hidden');
+            const voiceBtn = document.getElementById('voice-btn');
+            if (voiceBtn) voiceBtn.classList.remove('hidden');
         }
     }
 
@@ -611,7 +619,7 @@ class WebOSApp {
             <div style="padding: 20px;">
                 <h3 style="color: #667eea; margin-bottom: 15px;">ℹ️ Proprietà del sistema</h3>
                 <div style="background: #f7fafc; padding: 15px; border-radius: 8px; line-height: 2;">
-                    <p><strong>Sistema:</strong> WebOS Educativo v1.0</p>
+                    <p><strong>Sistema:</strong> webosx v1.0</p>
                     <p><strong>Utente:</strong> ${this.state.profile || 'Non selezionato'}</p>
                     <p><strong>Modalità:</strong> ${this.state.userMode}</p>
                     <p><strong>Sfondo:</strong> ${this.state.wallpaper}</p>
@@ -1269,7 +1277,7 @@ class WebOSApp {
         const ts = this.terminalState[windowId];
 
         const welcomeLines = [
-            { type: 'welcome', text: 'WebOS Educativo - Terminale v1.0' },
+            { type: 'welcome', text: 'webosx - Terminale v1.0' },
             { type: 'welcome', text: 'Digita "help" per vedere i comandi disponibili.' },
             { type: 'blank' },
         ];
@@ -1746,7 +1754,7 @@ class WebOSApp {
         this.terminalPrint(windowId, '', 'blank');
         const user = this.state.profile || 'utente';
         const hostname = 'webos';
-        const os = 'WebOS Educativo v1.0';
+        const os = 'webosx v1.0';
         const kernel = '5.15.0-webos';
         const uptime = this.getUptime();
         const shell = 'bash 5.1.16';
@@ -3811,8 +3819,8 @@ class WebOSApp {
     wakeUp() {
         const shutdownScreen = document.getElementById('shutdown-screen');
         shutdownScreen.classList.add('hidden');
-        this.showToast('Riaccensione', 'Bentornato nel WebOS Educativo!', 'success');
-        this.addNotification('Riaccensione', 'Bentornato nel WebOS Educativo!', 'success');
+        this.showToast('Riaccensione', 'Bentornato nel webosx!', 'success');
+        this.addNotification('Riaccensione', 'Bentornato nel webosx!', 'success');
         this.showTutorMessage('Bentornato! Sei di nuovo nel tuo computer virtuale.');
     }
 
