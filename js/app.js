@@ -371,10 +371,10 @@ class WebOSApp {
             bootScreen.classList.add('hidden');
         }
         const desktop = document.getElementById('desktop');
-        const taskbar = document.getElementById('taskbar');
+        const topBar = document.getElementById('top-bar');
         const startMenuUser = document.getElementById('start-menu-user');
         if (desktop) desktop.classList.remove('hidden');
-        if (taskbar) taskbar.classList.remove('hidden');
+        if (topBar) topBar.classList.remove('hidden');
         if (startMenuUser) {
             const names = {
                 bambino: '👦 Bambino',
