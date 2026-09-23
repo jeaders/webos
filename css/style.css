@@ -562,7 +562,7 @@ body {
      flex-wrap: wrap;
      align-content: flex-start;
      gap: 12px;
-     max-width: 100px;
+     max-width: 120px;
      z-index: 5;
  }
 
@@ -579,6 +579,7 @@ body {
      width: 84px;
      user-select: none;
      touch-action: none;
+     box-sizing: border-box;
  }
 
  .desktop-icon.dragging {
@@ -3752,23 +3753,23 @@ body {
 /* ===== Responsive ===== */
  @media (max-width: 768px) {
      .desktop-icons {
-         top: calc(var(--top-bar-height) + 12px);
-         bottom: auto;
+         top: auto;
+         bottom: calc(var(--dock-height) + 10px);
          left: 8px;
-         right: auto;
-         max-width: 90px;
+         right: 8px;
+         max-width: none;
          width: auto;
-         flex-direction: column;
-         flex-wrap: wrap;
+         flex-direction: row;
+         flex-wrap: nowrap;
          align-content: flex-start;
-         gap: 8px;
-         padding: 6px;
-         background: rgba(0,0,0,0.15);
-         border-radius: 10px;
-         backdrop-filter: blur(6px);
-         -webkit-backdrop-filter: blur(6px);
-         max-height: calc(100vh - var(--top-bar-height) - var(--dock-height) - 24px);
-         overflow-y: auto;
+         gap: 10px;
+         padding: 8px;
+         background: rgba(0,0,0,0.25);
+         border-radius: 14px;
+         backdrop-filter: blur(10px);
+         -webkit-backdrop-filter: blur(10px);
+         overflow-x: auto;
+         overflow-y: hidden;
      }
 
      .desktop-icon {

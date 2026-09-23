@@ -506,6 +506,7 @@ class WebOSApp {
 
     makeIconDraggable(element) {
         let isDragging = false;
+        let isPointerDown = false;
         let startX = 0;
         let startY = 0;
         let initialLeft = 0;
@@ -525,6 +526,7 @@ class WebOSApp {
             if (e.button && e.button !== 0) return;
             const pos = getClientXY(e);
             if (!pos) return;
+            isPointerDown = true;
             isDragging = false;
             startX = pos.x;
             startY = pos.y;
@@ -534,6 +536,7 @@ class WebOSApp {
         };
 
         const onPointerMove = (e) => {
+            if (!isPointerDown) return;
             const pos = getClientXY(e);
             if (!pos) return;
             const deltaX = pos.x - startX;
@@ -551,16 +554,21 @@ class WebOSApp {
         };
 
         const onPointerUp = () => {
-            if (!isDragging) return;
+            if (!isDragging && !isPointerDown) return;
             isDragging = false;
+            isPointerDown = false;
             element.classList.remove('dragging');
             element.style.transform = '';
             element.style.zIndex = '';
+            element.style.position = '';
+            element.style.left = '';
+            element.style.top = '';
         };
 
         const stop = () => {
-            if (isDragging) onPointerUp();
+            if (isDragging || isPointerDown) onPointerUp();
             isDragging = false;
+            isPointerDown = false;
         };
 
         element.addEventListener('mousedown', onPointerDown);
@@ -569,6 +577,7 @@ class WebOSApp {
         document.addEventListener('touchmove', onPointerMove, { passive: true });
         document.addEventListener('mouseup', stop);
         element.addEventListener('touchend', stop);
+        window.addEventListener('blur', stop);
     }
 
     // ===== Weather Widget =====
