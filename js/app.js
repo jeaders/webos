@@ -495,9 +495,9 @@ class WebOSApp {
                 <div class="icon-img">${app.icon}</div>
                 <div class="icon-label">${app.name}</div>
             `;
-            icon.addEventListener('dblclick', () => this.openApp(app.id));
-            icon.addEventListener('click', () => {
-                this.showTutorMessage(`Questa è l'app "${app.name}": ${app.description}. Fai doppio click per aprirla!`);
+            icon.addEventListener('click', (e) => {
+                if (icon.classList.contains('dragging')) return;
+                this.openApp(app.id);
             });
             this.makeIconDraggable(icon);
             container.appendChild(icon);
@@ -511,25 +511,33 @@ class WebOSApp {
         let initialLeft = 0;
         let initialTop = 0;
 
+        const getClientXY = (e) => {
+            if (e.touches && e.touches[0]) {
+                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+            if (typeof e.clientX === 'number' && typeof e.clientY === 'number') {
+                return { x: e.clientX, y: e.clientY };
+            }
+            return null;
+        };
+
         const onPointerDown = (e) => {
             if (e.button && e.button !== 0) return;
-            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            if (clientX === undefined || clientY === undefined) return;
+            const pos = getClientXY(e);
+            if (!pos) return;
             isDragging = false;
-            startX = clientX;
-            startY = clientY;
+            startX = pos.x;
+            startY = pos.y;
             const rect = element.getBoundingClientRect();
             initialLeft = rect.left;
             initialTop = rect.top;
         };
 
         const onPointerMove = (e) => {
-            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-            if (clientX === undefined || clientY === undefined) return;
-            const deltaX = clientX - startX;
-            const deltaY = clientY - startY;
+            const pos = getClientXY(e);
+            if (!pos) return;
+            const deltaX = pos.x - startX;
+            const deltaY = pos.y - startY;
             if (!isDragging && (Math.abs(deltaX) < 4 && Math.abs(deltaY) < 4)) return;
             if (!isDragging) {
                 isDragging = true;
