@@ -562,7 +562,10 @@ body {
      flex-wrap: wrap;
      align-content: flex-start;
      gap: 12px;
-     max-width: 120px;
+     max-width: calc(100vw - 32px);
+     max-height: calc(100vh - var(--top-bar-height) - var(--dock-height) - 24px);
+     overflow-y: auto;
+     padding-right: 4px;
      z-index: 5;
  }
 
@@ -3761,7 +3764,7 @@ body {
          width: auto;
          flex-direction: row;
          flex-wrap: nowrap;
-         align-content: flex-start;
+         align-content: center;
          gap: 10px;
          padding: 8px;
          background: rgba(0,0,0,0.25);
@@ -3770,6 +3773,7 @@ body {
          -webkit-backdrop-filter: blur(10px);
          overflow-x: auto;
          overflow-y: hidden;
+         justify-content: flex-start;
      }
 
      .desktop-icon {
