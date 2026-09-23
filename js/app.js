@@ -67,6 +67,25 @@ class WebOSApp {
             { id: 'app-store', name: 'App Store', icon: '🏪', description: 'Scopri nuove app' },
         ];
 
+        this.storeApps = [
+            { id: 'notepad', name: 'Blocco Note', icon: '📝', category: 'productivity', desc: 'Pre-installato' },
+            { id: 'terminal', name: 'Terminale Avanzato', icon: '💻', category: 'system', desc: 'Pre-installato' },
+            { id: 'calculator', name: 'Calcolatrice Pro', icon: '🧮', category: 'education', desc: 'Pre-installato' },
+            { id: 'file-manager', name: 'File Manager', icon: '📁', category: 'productivity', desc: 'Pre-installato' },
+            { id: 'browser', name: 'Browser Sicuro', icon: '🌐', category: 'system', desc: 'Pre-installato' },
+            { id: 'task-manager', name: 'Task Manager', icon: '📊', category: 'system', desc: 'Pre-installato' },
+            { id: 'tutor', name: 'Tutor AI', icon: '🤖', category: 'education', desc: 'Pre-installato' },
+            { id: 'gallery', name: 'Galleria', icon: '🖼️', category: 'creative', desc: 'Pre-installato' },
+            { id: 'music', name: 'Player Musicale', icon: '🎵', category: 'entertainment', desc: 'Pre-installato' },
+            { id: 'games', name: 'Giochi Didattici', icon: '🎮', category: 'entertainment', desc: 'Pre-installato' },
+            { id: 'settings', name: 'Impostazioni', icon: '⚙️', category: 'system', desc: 'Pre-installato' },
+            { id: 'guide', name: 'Guida Interattiva', icon: '📖', category: 'education', desc: 'Pre-installato' },
+            { id: 'calendar', name: 'Calendario', icon: '📅', category: 'productivity', desc: 'Gestisci eventi e promemoria' },
+            { id: 'draw', name: 'Disegna', icon: '🖌️', category: 'creative', desc: 'Disegna e crea immagini' },
+            { id: 'clock', name: 'Cronometro', icon: '⏱️', category: 'productivity', desc: 'Misura il tempo con precisione' },
+            { id: 'learn', name: 'Impara', icon: '📘', category: 'education', desc: 'Lezioni interattive su vari argomenti' },
+        ];
+
         this.wallpapers = {
             gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             blue: 'linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)',
@@ -484,10 +503,25 @@ class WebOSApp {
     }
 
     // ===== Desktop =====
+    getAllDesktopApps() {
+        const base = [...this.desktopApps];
+        this.storeApps.forEach(app => {
+            if (this.installedApps.has(app.id) && !base.find(a => a.id === app.id)) {
+                base.push({
+                    id: app.id,
+                    name: app.name,
+                    icon: app.icon,
+                    description: app.desc || 'App installata',
+                });
+            }
+        });
+        return base;
+    }
+
     createDesktopIcons() {
         const container = document.getElementById('desktop-icons');
         container.innerHTML = '';
-        this.desktopApps.forEach(app => {
+        this.getAllDesktopApps().forEach(app => {
             const icon = document.createElement('div');
             icon.className = `desktop-icon ${this.state.iconSize !== 'medium' ? `size-${this.state.iconSize}` : ''}`;
             icon.dataset.app = app.id;
@@ -981,7 +1015,7 @@ class WebOSApp {
         this.toggleStartMenu(false);
         this.playSound('click');
         this.addToRecentApps(appId);
-        const appConfig = this.desktopApps.find(a => a.id === appId);
+        const appConfig = this.getAllDesktopApps().find(a => a.id === appId);
         if (!appConfig) return;
         const existing = this.state.openWindows.find(w => w.appId === appId);
         if (existing) {
@@ -997,8 +1031,10 @@ class WebOSApp {
         const isMobile = window.innerWidth <= 768;
         const defaultWidth = appId === 'tutor' ? 400 : appId === 'notepad' ? 550 : appId === 'terminal' ? 700 : appId === 'task-manager' ? 600 : appId === 'gallery' ? 700 : appId === 'music' ? 750 : 600;
         const defaultHeight = appId === 'tutor' ? 500 : appId === 'notepad' ? 500 : appId === 'terminal' ? 450 : appId === 'task-manager' ? 500 : appId === 'gallery' ? 500 : appId === 'music' ? 500 : 450;
-        const winWidth = isMobile ? '95vw' : defaultWidth + 'px';
-        const winHeight = isMobile ? '80vh' : defaultHeight + 'px';
+        const maxWindowWidth = isMobile ? window.innerWidth * 0.95 : Math.min(defaultWidth, window.innerWidth * 0.85);
+        const maxWindowHeight = isMobile ? window.innerHeight * 0.80 : Math.min(defaultHeight, window.innerHeight * 0.85);
+        const winWidth = Math.max(320, maxWindowWidth);
+        const winHeight = Math.max(220, maxWindowHeight);
         const effectiveWidth = isMobile ? window.innerWidth * 0.95 : defaultWidth;
         const effectiveHeight = isMobile ? window.innerHeight * 0.80 : defaultHeight;
         const maxX = Math.max(0, window.innerWidth - effectiveWidth - 10);
@@ -4891,24 +4927,7 @@ class WebOSApp {
     appStoreFilter(windowId) {
         const cat = this.appStoreCategories[windowId] || 'all';
         const q = this.appStoreSearchQuery[windowId] || '';
-        const storeApps = [
-            { id: 'notepad', name: 'Blocco Note', icon: '📝', category: 'productivity', desc: 'Pre-installato' },
-            { id: 'terminal', name: 'Terminale Avanzato', icon: '💻', category: 'system', desc: 'Pre-installato' },
-            { id: 'calculator', name: 'Calcolatrice Pro', icon: '🧮', category: 'education', desc: 'Pre-installato' },
-            { id: 'file-manager', name: 'File Manager', icon: '📁', category: 'productivity', desc: 'Pre-installato' },
-            { id: 'browser', name: 'Browser Sicuro', icon: '🌐', category: 'system', desc: 'Pre-installato' },
-            { id: 'task-manager', name: 'Task Manager', icon: '📊', category: 'system', desc: 'Pre-installato' },
-            { id: 'tutor', name: 'Tutor AI', icon: '🤖', category: 'education', desc: 'Pre-installato' },
-            { id: 'gallery', name: 'Galleria', icon: '🖼️', category: 'creative', desc: 'Pre-installato' },
-            { id: 'music', name: 'Player Musicale', icon: '🎵', category: 'entertainment', desc: 'Pre-installato' },
-            { id: 'games', name: 'Giochi Didattici', icon: '🎮', category: 'entertainment', desc: 'Pre-installato' },
-            { id: 'settings', name: 'Impostazioni', icon: '⚙️', category: 'system', desc: 'Pre-installato' },
-            { id: 'guide', name: 'Guida Interattiva', icon: '📖', category: 'education', desc: 'Pre-installato' },
-            { id: 'calendar', name: 'Calendario', icon: '📅', category: 'productivity', desc: 'Gestisci eventi e promemoria' },
-            { id: 'draw', name: 'Disegna', icon: '🖌️', category: 'creative', desc: 'Disegna e crea immagini' },
-            { id: 'clock', name: 'Cronometro', icon: '⏱️', category: 'productivity', desc: 'Misura il tempo con precisione' },
-            { id: 'learn', name: 'Impara', icon: '📘', category: 'education', desc: 'Lezioni interattive su vari argomenti' },
-        ];
+        const storeApps = this.storeApps || [];
         let filtered = storeApps.filter(app => {
             const catMatch = cat === 'all' || app.category === cat;
             const qMatch = !q || app.name.toLowerCase().includes(q) || app.desc.toLowerCase().includes(q);
@@ -4937,6 +4956,7 @@ class WebOSApp {
                     localStorage.setItem('webos_installed_apps', JSON.stringify([...this.installedApps]));
                 } catch (e) {}
                 this.showToast('Installazione completata', `"${appId}" installato con successo!`, 'success');
+                this.createDesktopIcons();
                 this.appStoreFilter(windowId);
             } else {
                 btn.textContent = `Installazione ${Math.floor(progress)}%`;
@@ -4950,6 +4970,7 @@ class WebOSApp {
             localStorage.setItem('webos_installed_apps', JSON.stringify([...this.installedApps]));
         } catch (e) {}
         this.showToast('Disinstallazione', `"${appId}" disinstallato.`, 'info');
+        this.createDesktopIcons();
         this.appStoreFilter(windowId);
     }
 }
