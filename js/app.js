@@ -988,9 +988,10 @@ class WebOSApp {
         if (enabled) this.playSound('success');
     }
 
-    // ===== Taskbar & Start Menu =====
+    // ===== Top Bar & Start Menu =====
     updateClock() {
-        const clock = document.getElementById('taskbar-clock');
+        const clock = document.getElementById('top-bar-clock');
+        if (!clock) return;
         const now = new Date();
         const options = { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
         clock.textContent = now.toLocaleDateString('it-IT', options);
@@ -1131,9 +1132,53 @@ class WebOSApp {
                 return this.getMusicContent(windowId);
             case 'app-store':
                 return this.getAppStoreContent(windowId);
+            case 'calendar':
+                return this.getCalendarContent(windowId);
+            case 'draw':
+                return this.getDrawContent(windowId);
+            case 'clock':
+                return this.getClockContent(windowId);
+            case 'learn':
+                return this.getLearnContent(windowId);
             default:
                 return '<p>App in caricamento...</p>';
         }
+    }
+
+    getCalendarContent(windowId) {
+        return `
+            <div class="calendar-app">
+                <h3>Calendario</h3>
+                <p>Qui puoi gestire eventi e promemoria.</p>
+            </div>
+        `;
+    }
+
+    getDrawContent(windowId) {
+        return `
+            <div class="draw-app">
+                <h3>Disegna</h3>
+                <p>Qui puoi disegnare e creare immagini.</p>
+            </div>
+        `;
+    }
+
+    getClockContent(windowId) {
+        return `
+            <div class="clock-app">
+                <h3>Cronometro</h3>
+                <p>Qui puoi misurare il tempo con precisione.</p>
+            </div>
+        `;
+    }
+
+    getLearnContent(windowId) {
+        return `
+            <div class="learn-app">
+                <h3>Impara</h3>
+                <p>Qui puoi seguire lezioni interattive su vari argomenti.</p>
+            </div>
+        `;
     }
 
     focusWindow(windowId) {
@@ -1213,6 +1258,7 @@ class WebOSApp {
 
     updateTaskbarApps() {
         const container = document.getElementById('taskbar-apps');
+        if (!container) return;
         container.innerHTML = '';
         this.state.openWindows.forEach(w => {
             const btn = document.createElement('button');
@@ -1299,12 +1345,14 @@ class WebOSApp {
             if (!isResizing) return;
             const dx = e.clientX - startX;
             const dy = e.clientY - startY;
-            win.style.width = Math.max(300, initialWidth + dx) + 'px';
-            win.style.height = Math.max(200, initialHeight + dy) + 'px';
+            const maxWidth = Math.min(window.innerWidth * 0.9, 1200);
+            const maxHeight = Math.min(window.innerHeight * 0.85, 800);
+            win.style.width = Math.max(300, Math.min(maxWidth, initialWidth + dx)) + 'px';
+            win.style.height = Math.max(200, Math.min(maxHeight, initialHeight + dy)) + 'px';
             const windowData = this.state.openWindows.find(w => w.id === windowId);
             if (windowData) {
-                windowData.width = Math.max(300, initialWidth + dx);
-                windowData.height = Math.max(200, initialHeight + dy);
+                windowData.width = Math.max(300, Math.min(maxWidth, initialWidth + dx));
+                windowData.height = Math.max(200, Math.min(maxHeight, initialHeight + dy));
                 windowData.maximized = false;
                 win.classList.remove('maximized');
                 win.style.borderRadius = '10px';
