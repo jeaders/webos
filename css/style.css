@@ -3780,27 +3780,27 @@ body {
          position: relative;
      }
 
-    .desktop-icon .icon-img {
-        font-size: 28px;
-    }
+     .desktop-icon .icon-img {
+         font-size: 28px;
+     }
 
-    .desktop-icon .icon-label {
-        font-size: 9px;
-    }
+     .desktop-icon .icon-label {
+         font-size: 9px;
+     }
 
     .start-menu {
         width: 260px;
     }
 
     .window {
-        min-width: 280px;
-        min-height: 180px;
+        min-width: 240px;
+        min-height: 160px;
         max-width: 95vw;
-        max-height: 85vh;
+        max-height: 82vh;
     }
 
     .window-container {
-        overflow: hidden;
+        overflow: visible;
     }
 
     .window-titlebar {

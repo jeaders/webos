@@ -513,12 +513,10 @@ class WebOSApp {
 
         const onPointerDown = (e) => {
             if (e.button && e.button !== 0) return;
-            isDragging = false;
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
             if (clientX === undefined || clientY === undefined) return;
-            isDragging = true;
-            element.classList.add('dragging');
+            isDragging = false;
             startX = clientX;
             startY = clientY;
             const rect = element.getBoundingClientRect();
@@ -527,12 +525,19 @@ class WebOSApp {
         };
 
         const onPointerMove = (e) => {
-            if (!isDragging) return;
             const clientX = e.clientX || (e.touches && e.touches[0].clientX);
             const clientY = e.clientY || (e.touches && e.touches[0].clientY);
             if (clientX === undefined || clientY === undefined) return;
             const deltaX = clientX - startX;
             const deltaY = clientY - startY;
+            if (!isDragging && (Math.abs(deltaX) < 4 && Math.abs(deltaY) < 4)) return;
+            if (!isDragging) {
+                isDragging = true;
+                element.classList.add('dragging');
+                element.style.position = 'absolute';
+                element.style.left = initialLeft + 'px';
+                element.style.top = initialTop + 'px';
+            }
             element.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
             element.style.zIndex = 999;
         };
@@ -545,12 +550,17 @@ class WebOSApp {
             element.style.zIndex = '';
         };
 
+        const stop = () => {
+            if (isDragging) onPointerUp();
+            isDragging = false;
+        };
+
         element.addEventListener('mousedown', onPointerDown);
         element.addEventListener('touchstart', onPointerDown, { passive: true });
         document.addEventListener('mousemove', onPointerMove);
         document.addEventListener('touchmove', onPointerMove, { passive: true });
-        document.addEventListener('mouseup', onPointerUp);
-        document.addEventListener('touchend', onPointerUp);
+        document.addEventListener('mouseup', stop);
+        element.addEventListener('touchend', stop);
     }
 
     // ===== Weather Widget =====
