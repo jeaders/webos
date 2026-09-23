@@ -1146,37 +1146,774 @@ class WebOSApp {
     }
 
     getCalendarContent(windowId) {
-        return `
-            <div class="calendar-app">
-                <h3>Calendario</h3>
-                <p>Qui puoi gestire eventi e promemoria.</p>
+        const now = new Date();
+        const months = [
+            'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+            'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+        ];
+        const days = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = now.getDate();
+        const startDay = firstDay === 0 ? 6 : firstDay - 1;
+        let calendarHTML = `
+            <div class="calendar-app" id="calendar-app-${windowId}">
+                <div class="calendar-header">
+                    <button class="calendar-nav-btn" onclick="app.prevMonth('${windowId}')">&lt;</button>
+                    <span class="calendar-month" id="calendar-month-${windowId}">${months[month]} ${year}</span>
+                    <button class="calendar-nav-btn" onclick="app.nextMonth('${windowId}')">&gt;</button>
+                </div>
+                <div class="calendar-weekdays">
+                    ${days.map(d => `<div class="cal-weekday">${d}</div>`).join('')}
+                </div>
+                <div class="calendar-grid" id="calendar-grid-${windowId}">
+        `;
+        for (let i = 0; i < startDay; i++) {
+            calendarHTML += '<div class="cal-cell cal-empty"></div>';
+        }
+        for (let d = 1; d <= daysInMonth; d++) {
+            const isToday = d === today && month === now.getMonth() && year === now.getFullYear();
+            calendarHTML += `<div class="cal-cell ${isToday ? 'cal-today' : ''}" data-day="${d}" onclick="app.selectCalendarDay('${windowId}', ${d})">${d}</div>`;
+        }
+        calendarHTML += `
+                </div>
+                <div class="calendar-events-panel" id="calendar-events-${windowId}">
+                    <h4>Eventi</h4>
+                    <div class="calendar-events-list" id="calendar-events-list-${windowId}">
+                        <p class="calendar-no-events">Seleziona un giorno per vedere gli eventi</p>
+                    </div>
+                </div>
+                <div class="calendar-add-form hidden" id="calendar-add-form-${windowId}">
+                    <input type="text" id="calendar-event-title-${windowId}" placeholder="Titolo evento" maxlength="50">
+                    <input type="time" id="calendar-event-time-${windowId}">
+                    <button class="calendar-save-btn" onclick="app.saveCalendarEvent('${windowId}')">Salva</button>
+                    <button class="calendar-cancel-btn" onclick="app.cancelCalendarEvent('${windowId}')">Annulla</button>
+                </div>
             </div>
         `;
+        return calendarHTML;
+    }
+
+    initCalendar(windowId) {
+        this.calendarState = this.calendarState || {};
+        this.calendarState[windowId] = {
+            year: new Date().getFullYear(),
+            month: new Date().getMonth(),
+            selectedDay: null,
+        };
+        this.renderCalendarEvents(windowId);
+    }
+
+    prevMonth(windowId) {
+        const state = this.calendarState[windowId];
+        state.month--;
+        if (state.month < 0) { state.month = 11; state.year--; }
+        this.refreshCalendar(windowId);
+    }
+
+    nextMonth(windowId) {
+        const state = this.calendarState[windowId];
+        state.month++;
+        if (state.month > 11) { state.month = 0; state.year++; }
+        this.refreshCalendar(windowId);
+    }
+
+    refreshCalendar(windowId) {
+        const state = this.calendarState[windowId];
+        const months = [
+            'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+            'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+        ];
+        const days = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+        const year = state.year;
+        const month = state.month;
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
+        const startDay = firstDay === 0 ? 6 : firstDay - 1;
+        let gridHTML = '';
+        for (let i = 0; i < startDay; i++) {
+            gridHTML += '<div class="cal-cell cal-empty"></div>';
+        }
+        for (let d = 1; d <= daysInMonth; d++) {
+            const isToday = d === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+            gridHTML += `<div class="cal-cell ${isToday ? 'cal-today' : ''}" data-day="${d}" onclick="app.selectCalendarDay('${windowId}', ${d})">${d}</div>`;
+        }
+        const grid = document.getElementById(`calendar-grid-${windowId}`);
+        if (grid) grid.innerHTML = gridHTML;
+        const monthLabel = document.getElementById(`calendar-month-${windowId}`);
+        if (monthLabel) monthLabel.textContent = `${months[month]} ${year}`;
+    }
+
+    selectCalendarDay(windowId, day) {
+        const state = this.calendarState[windowId];
+        state.selectedDay = day;
+        document.querySelectorAll(`#calendar-app-${windowId} .cal-cell`).forEach(c => c.classList.remove('selected'));
+        const cell = document.querySelector(`#calendar-app-${windowId} .cal-cell[data-day="${day}"]`);
+        if (cell) cell.classList.add('selected');
+        const form = document.getElementById(`calendar-add-form-${windowId}`);
+        if (form) form.classList.remove('hidden');
+        this.renderCalendarEvents(windowId);
+    }
+
+    saveCalendarEvent(windowId) {
+        const state = this.calendarState[windowId];
+        const titleInput = document.getElementById(`calendar-event-title-${windowId}`);
+        const timeInput = document.getElementById(`calendar-event-time-${windowId}`);
+        const title = titleInput ? titleInput.value.trim() : '';
+        const time = timeInput ? timeInput.value : '';
+        if (!title) return;
+        const key = `webos_calendar_events`;
+        const events = JSON.parse(localStorage.getItem(key) || '[]');
+        const dateKey = `${state.year}-${String(state.month + 1).padStart(2, '0')}-${String(state.selectedDay).padStart(2, '0')}`;
+        events.push({ dateKey, title, time, id: Date.now() });
+        localStorage.setItem(key, JSON.stringify(events));
+        if (titleInput) titleInput.value = '';
+        if (timeInput) timeInput.value = '';
+        this.renderCalendarEvents(windowId);
+        this.playSound('success');
+    }
+
+    cancelCalendarEvent(windowId) {
+        const titleInput = document.getElementById(`calendar-event-title-${windowId}`);
+        const timeInput = document.getElementById(`calendar-event-time-${windowId}`);
+        if (titleInput) titleInput.value = '';
+        if (timeInput) timeInput.value = '';
+    }
+
+    deleteCalendarEvent(windowId, eventId) {
+        const key = `webos_calendar_events`;
+        const events = JSON.parse(localStorage.getItem(key) || '[]');
+        const filtered = events.filter(e => e.id !== eventId);
+        localStorage.setItem(key, JSON.stringify(filtered));
+        this.renderCalendarEvents(windowId);
+        this.playSound('click');
+    }
+
+    renderCalendarEvents(windowId) {
+        const state = this.calendarState[windowId];
+        const list = document.getElementById(`calendar-events-list-${windowId}`);
+        if (!list) return;
+        const key = `webos_calendar_events`;
+        const events = JSON.parse(localStorage.getItem(key) || '[]');
+        const dateKey = `${state.year}-${String(state.month + 1).padStart(2, '0')}-${String(state.selectedDay || new Date().getDate()).padStart(2, '0')}`;
+        const dayEvents = events.filter(e => e.dateKey === dateKey);
+        const allEvents = events;
+        document.querySelectorAll(`#calendar-app-${windowId} .cal-cell`).forEach(c => {
+            const d = parseInt(c.dataset.day);
+            if (isNaN(d)) return;
+            const dk = `${state.year}-${String(state.month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const hasEvent = allEvents.some(e => e.dateKey === dk);
+            c.classList.toggle('has-event', hasEvent);
+        });
+        if (dayEvents.length === 0) {
+            list.innerHTML = '<p class="calendar-no-events">Nessun evento per questo giorno</p>';
+            return;
+        }
+        list.innerHTML = dayEvents.map(e => `
+            <div class="calendar-event-item">
+                <span class="calendar-event-time">${e.time ? e.time + ' - ' : ''}</span>
+                <span class="calendar-event-title">${this.escapeHtml(e.title)}</span>
+                <button class="calendar-delete-btn" onclick="app.deleteCalendarEvent('${windowId}', ${e.id})">✕</button>
+            </div>
+        `).join('');
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     getDrawContent(windowId) {
         return `
-            <div class="draw-app">
-                <h3>Disegna</h3>
-                <p>Qui puoi disegnare e creare immagini.</p>
+            <div class="draw-app" id="draw-app-${windowId}">
+                <div class="draw-toolbar">
+                    <div class="draw-tool-group">
+                        <label class="draw-label">Colore:</label>
+                        <input type="color" class="draw-color-picker" id="draw-color-${windowId}" value="#000000">
+                    </div>
+                    <div class="draw-tool-group">
+                        <label class="draw-label">Dimensione:</label>
+                        <input type="range" class="draw-size-slider" id="draw-size-${windowId}" min="1" max="50" value="5">
+                        <span class="draw-size-value" id="draw-size-value-${windowId}">5</span>
+                    </div>
+                    <div class="draw-tool-group">
+                        <button class="draw-tool-btn active" id="draw-brush-${windowId}" onclick="app.setDrawTool('${windowId}', 'brush')">🖌️ Pennello</button>
+                        <button class="draw-tool-btn" id="draw-eraser-${windowId}" onclick="app.setDrawTool('${windowId}', 'eraser')">🧹 Gomma</button>
+                    </div>
+                    <div class="draw-tool-group">
+                        <button class="draw-action-btn" onclick="app.undoDraw('${windowId}')">↩ Annulla</button>
+                        <button class="draw-action-btn" onclick="app.clearDraw('${windowId}')">🗑️ Cancella</button>
+                        <button class="draw-action-btn draw-save-btn" onclick="app.saveDraw('${windowId}')">💾 Salva</button>
+                    </div>
+                </div>
+                <div class="draw-canvas-wrapper" id="draw-canvas-wrapper-${windowId}">
+                    <canvas class="draw-canvas" id="draw-canvas-${windowId}"></canvas>
+                </div>
             </div>
         `;
+    }
+
+    initDraw(windowId) {
+        const canvas = document.getElementById(`draw-canvas-${windowId}`);
+        const wrapper = document.getElementById(`draw-canvas-wrapper-${windowId}`);
+        if (!canvas || !wrapper) return;
+        const ctx = canvas.getContext('2d');
+        const colorPicker = document.getElementById(`draw-color-${windowId}`);
+        const sizeSlider = document.getElementById(`draw-size-${windowId}`);
+        const sizeValue = document.getElementById(`draw-size-value-${windowId}`);
+        this.drawState = this.drawState || {};
+        this.drawState[windowId] = {
+            drawing: false,
+            tool: 'brush',
+            color: '#000000',
+            size: 5,
+            history: [],
+            historyIndex: -1,
+        };
+        const resizeCanvas = () => {
+            const rect = wrapper.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = Math.max(300, window.innerHeight * 0.5);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            this.saveDrawState(windowId);
+        };
+        resizeCanvas();
+        const saveState = () => {
+            const state = this.drawState[windowId];
+            state.history = state.history.slice(0, state.historyIndex + 1);
+            state.history.push(canvas.toDataURL());
+            if (state.history.length > 20) state.history.shift();
+            state.historyIndex = state.history.length - 1;
+        };
+        this.saveDrawState = () => saveState();
+        const getPos = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches ? e.touches[0] : e;
+            return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+        };
+        const startDraw = (e) => {
+            e.preventDefault();
+            const state = this.drawState[windowId];
+            state.drawing = true;
+            const pos = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            if (state.tool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineWidth = state.size * 2;
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = state.color;
+                ctx.lineWidth = state.size;
+            }
+        };
+        const draw = (e) => {
+            if (!this.drawState[windowId].drawing) return;
+            e.preventDefault();
+            const pos = getPos(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        };
+        const stopDraw = () => {
+            if (this.drawState[windowId].drawing) {
+                this.drawState[windowId].drawing = false;
+                ctx.closePath();
+                ctx.globalCompositeOperation = 'source-over';
+                this.saveDrawState(windowId);
+            }
+        };
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDraw);
+        canvas.addEventListener('mouseleave', stopDraw);
+        canvas.addEventListener('touchstart', startDraw, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDraw);
+        canvas.addEventListener('touchcancel', stopDraw);
+        if (colorPicker) {
+            colorPicker.addEventListener('input', (e) => {
+                this.drawState[windowId].color = e.target.value;
+                this.drawState[windowId].tool = 'brush';
+                this.updateDrawToolButtons(windowId);
+            });
+        }
+        if (sizeSlider) {
+            sizeSlider.addEventListener('input', (e) => {
+                this.drawState[windowId].size = parseInt(e.target.value);
+                if (sizeValue) sizeValue.textContent = e.target.value;
+            });
+        }
+        window.addEventListener('resize', () => {
+            const imageData = canvas.toDataURL();
+            resizeCanvas();
+            const img = new Image();
+            img.onload = () => ctx.drawImage(img, 0, 0);
+            img.src = imageData;
+        });
+    }
+
+    setDrawTool(windowId, tool) {
+        this.drawState[windowId].tool = tool;
+        this.updateDrawToolButtons(windowId);
+    }
+
+    updateDrawToolButtons(windowId) {
+        const brushBtn = document.getElementById(`draw-brush-${windowId}`);
+        const eraserBtn = document.getElementById(`draw-eraser-${windowId}`);
+        if (brushBtn) brushBtn.classList.toggle('active', this.drawState[windowId].tool === 'brush');
+        if (eraserBtn) eraserBtn.classList.toggle('active', this.drawState[windowId].tool === 'eraser');
+    }
+
+    undoDraw(windowId) {
+        const state = this.drawState[windowId];
+        if (state.historyIndex > 0) {
+            state.historyIndex--;
+            const canvas = document.getElementById(`draw-canvas-${windowId}`);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.onload = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+            };
+            img.src = state.history[state.historyIndex];
+            this.playSound('click');
+        }
+    }
+
+    clearDraw(windowId) {
+        const canvas = document.getElementById(`draw-canvas-${windowId}`);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        this.saveDrawState(windowId);
+        this.playSound('success');
+    }
+
+    saveDraw(windowId) {
+        const canvas = document.getElementById(`draw-canvas-${windowId}`);
+        if (!canvas) return;
+        const link = document.createElement('a');
+        link.download = `disegno-${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        this.playSound('success');
+        this.showToast('Salvato', 'Disegno salvato come immagine.', 'success');
     }
 
     getClockContent(windowId) {
         return `
-            <div class="clock-app">
-                <h3>Cronometro</h3>
-                <p>Qui puoi misurare il tempo con precisione.</p>
+            <div class="clock-app" id="clock-app-${windowId}">
+                <div class="clock-tabs">
+                    <button class="clock-tab active" id="clock-tab-stopwatch-${windowId}" onclick="app.setClockTab('${windowId}', 'stopwatch')">Cronometro</button>
+                    <button class="clock-tab" id="clock-tab-timer-${windowId}" onclick="app.setClockTab('${windowId}', 'timer')">Timer</button>
+                </div>
+                <div class="clock-panel" id="clock-panel-stopwatch-${windowId}">
+                    <div class="clock-display" id="clock-display-${windowId}">00:00:00.000</div>
+                    <div class="clock-controls">
+                        <button class="clock-btn clock-start-btn" id="clock-start-${windowId}" onclick="app.toggleClock('${windowId}')">Start</button>
+                        <button class="clock-btn" onclick="app.resetClock('${windowId}')">Reset</button>
+                        <button class="clock-btn" onclick="app.lapClock('${windowId}')">Giro</button>
+                    </div>
+                    <div class="clock-laps" id="clock-laps-${windowId}"></div>
+                </div>
+                <div class="clock-panel hidden" id="clock-panel-timer-${windowId}">
+                    <div class="clock-display" id="timer-display-${windowId}">05:00</div>
+                    <div class="timer-inputs">
+                        <div class="timer-input-group">
+                            <label>Minuti</label>
+                            <input type="number" class="timer-input" id="timer-min-${windowId}" min="0" max="99" value="5">
+                        </div>
+                        <div class="timer-input-group">
+                            <label>Secondi</label>
+                            <input type="number" class="timer-input" id="timer-sec-${windowId}" min="0" max="59" value="0">
+                        </div>
+                    </div>
+                    <div class="clock-controls">
+                        <button class="clock-btn clock-start-btn" id="timer-start-${windowId}" onclick="app.toggleTimer('${windowId}')">Start</button>
+                        <button class="clock-btn" onclick="app.resetTimer('${windowId}')">Reset</button>
+                    </div>
+                </div>
             </div>
         `;
     }
 
+    initClock(windowId) {
+        this.clockState = this.clockState || {};
+        this.clockState[windowId] = {
+            running: false,
+            startTime: 0,
+            elapsed: 0,
+            interval: null,
+            laps: [],
+            timerRunning: false,
+            timerEnd: 0,
+            timerInterval: null,
+            tab: 'stopwatch',
+        };
+        this.updateClockDisplay(windowId);
+    }
+
+    setClockTab(windowId, tab) {
+        const state = this.clockState[windowId];
+        state.tab = tab;
+        document.querySelectorAll(`#clock-app-${windowId} .clock-tab`).forEach(t => t.classList.toggle('active', t.id === `clock-tab-${tab}-${windowId}`));
+        document.getElementById(`clock-panel-stopwatch-${windowId}`)?.classList.toggle('hidden', tab !== 'stopwatch');
+        document.getElementById(`clock-panel-timer-${windowId}`)?.classList.toggle('hidden', tab !== 'timer');
+    }
+
+    toggleClock(windowId) {
+        const state = this.clockState[windowId];
+        const btn = document.getElementById(`clock-start-${windowId}`);
+        if (state.running) {
+            state.running = false;
+            state.elapsed += Date.now() - state.startTime;
+            clearInterval(state.interval);
+            if (btn) btn.textContent = 'Start';
+        } else {
+            state.running = true;
+            state.startTime = Date.now();
+            state.interval = setInterval(() => this.updateClockDisplay(windowId), 10);
+            if (btn) btn.textContent = 'Stop';
+        }
+    }
+
+    resetClock(windowId) {
+        const state = this.clockState[windowId];
+        state.running = false;
+        state.elapsed = 0;
+        state.laps = [];
+        clearInterval(state.interval);
+        const btn = document.getElementById(`clock-start-${windowId}`);
+        if (btn) btn.textContent = 'Start';
+        this.updateClockDisplay(windowId);
+        const laps = document.getElementById(`clock-laps-${windowId}`);
+        if (laps) laps.innerHTML = '';
+    }
+
+    lapClock(windowId) {
+        const state = this.clockState[windowId];
+        const current = state.elapsed + (state.running ? Date.now() - state.startTime : 0);
+        state.laps.push(current);
+        const laps = document.getElementById(`clock-laps-${windowId}`);
+        if (laps) {
+            const lapDiv = document.createElement('div');
+            lapDiv.className = 'clock-lap-item';
+            const lapNum = state.laps.length;
+            const prev = state.laps.length > 1 ? state.laps[state.laps.length - 2] : 0;
+            lapDiv.innerHTML = `<span>Giro ${lapNum}</span><span>${this.formatMs(current - prev)}</span><span>${this.formatMs(current)}</span>`;
+            laps.prepend(lapDiv);
+        }
+    }
+
+    updateClockDisplay(windowId) {
+        const state = this.clockState[windowId];
+        const current = state.elapsed + (state.running ? Date.now() - state.startTime : 0);
+        const display = document.getElementById(`clock-display-${windowId}`);
+        if (display) display.textContent = this.formatMs(current);
+    }
+
+    formatMs(ms) {
+        const totalMs = Math.max(0, ms);
+        const h = Math.floor(totalMs / 3600000);
+        const m = Math.floor((totalMs % 3600000) / 60000);
+        const s = Math.floor((totalMs % 60000) / 1000);
+        const mil = Math.floor(totalMs % 1000);
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(mil).padStart(3, '0')}`;
+    }
+
+    toggleTimer(windowId) {
+        const state = this.clockState[windowId];
+        const btn = document.getElementById(`timer-start-${windowId}`);
+        if (state.timerRunning) {
+            state.timerRunning = false;
+            clearInterval(state.timerInterval);
+            if (btn) btn.textContent = 'Start';
+        } else {
+            const min = parseInt(document.getElementById(`timer-min-${windowId}`)?.value || '5');
+            const sec = parseInt(document.getElementById(`timer-sec-${windowId}`)?.value || '0');
+            const total = (min * 60 + sec) * 1000;
+            if (total <= 0) return;
+            state.timerEnd = Date.now() + total;
+            state.timerRunning = true;
+            state.timerInterval = setInterval(() => this.updateTimerDisplay(windowId), 100);
+            if (btn) btn.textContent = 'Stop';
+        }
+    }
+
+    resetTimer(windowId) {
+        const state = this.clockState[windowId];
+        state.timerRunning = false;
+        clearInterval(state.timerInterval);
+        const btn = document.getElementById(`timer-start-${windowId}`);
+        if (btn) btn.textContent = 'Start';
+        const display = document.getElementById(`timer-display-${windowId}`);
+        if (display) {
+            const min = document.getElementById(`timer-min-${windowId}`)?.value || '5';
+            const sec = document.getElementById(`timer-sec-${windowId}`)?.value || '0';
+            display.textContent = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+        }
+    }
+
+    updateTimerDisplay(windowId) {
+        const state = this.clockState[windowId];
+        const remaining = state.timerEnd - Date.now();
+        const display = document.getElementById(`timer-display-${windowId}`);
+        if (!display) return;
+        if (remaining <= 0) {
+            clearInterval(state.timerInterval);
+            state.timerRunning = false;
+            display.textContent = '00:00';
+            const btn = document.getElementById(`timer-start-${windowId}`);
+            if (btn) btn.textContent = 'Start';
+            this.playSound('success');
+            this.showToast('Timer', 'Tempo scaduto!', 'success');
+            return;
+        }
+        const totalSec = Math.ceil(remaining / 1000);
+        const m = Math.floor(totalSec / 60);
+        const s = totalSec % 60;
+        display.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    setLearnDifficulty(windowId, difficulty) {
+        const state = this.learnState[windowId];
+        state.difficulty = difficulty;
+        state.score = 0;
+        state.total = 0;
+        state.currentQuestion = null;
+        state.answered = false;
+        this.renderLearnQuestion(windowId);
+    }
+
+    getLearnCategoriesHTML(windowId) {
+        const categories = [
+            { id: 'math', name: 'Matematica', icon: '🔢' },
+            { id: 'science', name: 'Scienze', icon: '🔬' },
+            { id: 'history', name: 'Storia', icon: '📜' },
+            { id: 'geography', name: 'Geografia', icon: '🌍' },
+        ];
+        return categories.map(c => `
+            <button class="learn-cat-btn" onclick="app.selectLearnCategory('${windowId}', '${c.id}')">
+                <span>${c.icon}</span> ${c.name}
+            </button>
+        `).join('');
+    }
+
+    initLearn(windowId) {
+        this.learnState = this.learnState || {};
+        this.learnState[windowId] = {
+            category: null,
+            difficulty: 'easy',
+            score: 0,
+            total: 0,
+            currentQuestion: null,
+            answered: false,
+        };
+    }
+
+    selectLearnCategory(windowId, category) {
+        const state = this.learnState[windowId];
+        state.category = category;
+        state.score = 0;
+        state.total = 0;
+        state.answered = false;
+        this.renderLearnQuestion(windowId);
+    }
+
+    getLearnQuestions(category, difficulty) {
+        const all = {
+            math: {
+                easy: [
+                    { q: 'Quanto fa 2 + 2?', options: ['3', '4', '5', '6'], a: 1 },
+                    { q: 'Quanto fa 5 + 3?', options: ['6', '7', '8', '9'], a: 2 },
+                    { q: 'Quanto fa 10 - 4?', options: ['4', '5', '6', '7'], a: 2 },
+                    { q: 'Quanto fa 3 x 3?', options: ['6', '7', '8', '9'], a: 3 },
+                    { q: 'Quanto fa 8 / 2?', options: ['2', '3', '4', '5'], a: 2 },
+                ],
+                medium: [
+                    { q: 'Quanto fa 12 x 12?', options: ['144', '124', '132', '156'], a: 0 },
+                    { q: 'Quanto fa 45 / 5?', options: ['7', '8', '9', '10'], a: 2 },
+                    { q: 'Quanto fa 7 x 8?', options: ['54', '56', '58', '64'], a: 1 },
+                    { q: 'Quanto fa 100 - 37?', options: ['53', '63', '73', '67'], a: 1 },
+                    { q: 'Quanto fa 15 + 27?', options: ['32', '42', '52', '62'], a: 1 },
+                ],
+                hard: [
+                    { q: 'Quanto fa 13 x 13?', options: ['169', '159', '179', '189'], a: 0 },
+                    { q: 'Qual è il quadrato di 9?', options: ['81', '71', '91', '99'], a: 0 },
+                    { q: 'Quanto fa 144 / 12?', options: ['10', '11', '12', '13'], a: 2 },
+                    { q: 'Quanto fa 2^5?', options: ['16', '32', '64', '8'], a: 1 },
+                    { q: 'Quanto fa sqrt(64)?', options: ['6', '7', '8', '9'], a: 2 },
+                ],
+            },
+            science: {
+                easy: [
+                    { q: 'Quanti pianeti ci sono nel sistema solare?', options: ['7', '8', '9', '10'], a: 1 },
+                    { q: 'Di cosa abbiamo bisogno per respirare?', options: ['Azoto', 'Ossigeno', 'Idrogeno', 'Elio'], a: 1 },
+                    { q: 'Quale colore ha la foglia?', options: ['Blu', 'Rossa', 'Verde', 'Gialla'], a: 2 },
+                    { q: 'Cosa cade dal cielo quando piove?', options: ['Neve', 'Acqua', 'Grandine', 'Tutte'], a: 3 },
+                    { q: 'Il sole sorge da?', options: ['Ovest', 'Est', 'Nord', 'Sud'], a: 1 },
+                ],
+                medium: [
+                    { q: 'Quale organo pompa il sangue?', options: ['Polmoni', 'Fegato', 'Cuore', 'Reni'], a: 2 },
+                    { q: 'L\'acqua è composta da?', options: ['H2O', 'CO2', 'NaCl', 'O2'], a: 0 },
+                    { q: 'Quale pianeta è il più grande?', options: ['Terra', 'Marte', 'Giove', 'Saturno'], a: 2 },
+                    { q: 'A che temperatura bolle l\'acqua?', options: ['90°C', '100°C', '110°C', '120°C'], a: 1 },
+                    { q: 'Cosa produce la fotosintesi?', options: ['Ossigeno', 'Azoto', 'CO2', 'H2O'], a: 0 },
+                ],
+                hard: [
+                    { q: 'Qual è l\'elemento con simbolo Fe?', options: ['Fluoro', 'Ferro', 'Fosforo', 'Francio'], a: 1 },
+                    { q: 'Quale legge descrive F=ma?', options: ['Newton', 'Keplero', 'Galileo', 'Einstein'], a: 0 },
+                    { q: 'La velocità della luce è circa?', options: ['300.000 km/s', '150.000 km/s', '500.000 km/s', '1.000.000 km/s'], a: 0 },
+                    { q: 'Quale gas è responsabile dell\'effetto serra?', options: ['O2', 'N2', 'CO2', 'H2'], a: 2 },
+                    { q: 'Quanti cromosomi ha l\'uomo?', options: ['44', '46', '48', '42'], a: 1 },
+                ],
+            },
+            history: {
+                easy: [
+                    { q: 'Chi ha scoperto l\'America?', options: ['Magellano', 'Colombo', 'Vespucci', 'Cortez'], a: 1 },
+                    { q: 'In quale città si trova il Colosseo?', options: ['Milano', 'Roma', 'Napoli', 'Firenze'], a: 1 },
+                    { q: 'Chi ha dipinto la Gioconda?', options: ['Michelangelo', 'Raffaello', 'Da Vinci', 'Botticelli'], a: 2 },
+                    { q: 'In che anno è caduto il muro di Berlino?', options: ['1987', '1988', '1989', '1990'], a: 2 },
+                    { q: 'Chi era Giulio Cesare?', options: ['Un imperatore', 'Un gladiatore', 'Un console romano', 'Un generale'], a: 2 },
+                ],
+                medium: [
+                    { q: 'Quando è iniziata la Prima Guerra Mondiale?', options: ['1912', '1914', '1916', '1918'], a: 1 },
+                    { q: 'Chi ha scritto la Divina Commedia?', options: ['Petrarca', 'Dante', 'Boccaccio', 'Ariosto'], a: 1 },
+                    { q: 'In che anno è stata fondata Roma?', options: ['753 a.C.', '650 a.C.', '500 a.C.', '1000 a.C.'], a: 0 },
+                    { q: 'Chi è stato il primo Presidente degli USA?', options: ['Jefferson', 'Adams', 'Washington', 'Lincoln'], a: 2 },
+                    { q: 'Che anno è il 2000?', options: ['XX', 'XXI', 'XIX', 'XXII'], a: 1 },
+                ],
+                hard: [
+                    { q: 'Quando è caduto l\'Impero Romano d\'Occidente?', options: ['395 d.C.', '410 d.C.', '476 d.C.', '500 d.C.'], a: 2 },
+                    { q: 'Chi ha guidato la Rivoluzione Francese?', options: ['Luigi XVI', 'Robespierre', 'Carlo Magno', 'Napoleone'], a: 1 },
+                    { q: 'In che anno è iniziata la Seconda Guerra Mondiale?', options: ['1937', '1938', '1939', '1940'], a: 2 },
+                    { q: 'Dove è nata la democrazia?', options: ['Roma', 'Atene', 'Sparta', 'Cartagine'], a: 1 },
+                    { q: 'Chi è stato il primo uomo sulla luna?', options: ['Glenn', 'Armstrong', 'Aldrin', 'Shepard'], a: 1 },
+                ],
+            },
+            geography: {
+                easy: [
+                    { q: 'Qual è la capitale d\'Italia?', options: ['Milano', 'Roma', 'Napoli', 'Torino'], a: 1 },
+                    { q: 'In quale continente si trova il Brasile?', options: ['Europa', 'Asia', 'Africa', 'America'], a: 3 },
+                    { q: 'Quale è il fiume più lungo d\'Italia?', options: ['Adige', 'Po', 'Tevere', 'Arno'], a: 1 },
+                    { q: 'Quanti continenti ci sono?', options: ['5', '6', '7', '8'], a: 2 },
+                    { q: 'Dove si trova la Torre Eiffel?', options: ['Londra', 'Roma', 'Parigi', 'Berlino'], a: 2 },
+                ],
+                medium: [
+                    { q: 'Qual è la capitale della Francia?', options: ['Lione', 'Marsiglia', 'Parigi', 'Tolosa'], a: 2 },
+                    { q: 'In quale mare si trova la Sicilia?', options: ['Tirreno', 'Adriatico', 'Ionio', 'Mediterraneo'], a: 3 },
+                    { q: 'Quale paese ha la forma di uno stivale?', options: ['Spagna', 'Italia', 'Grecia', 'Portogallo'], a: 1 },
+                    { q: 'Qual è la montagna più alta d\'Europa?', options: ['Monte Bianco', 'Cervino', 'Gran Paradiso', 'Rosa'], a: 0 },
+                    { q: 'Dove si trova il deserto del Sahara?', options: ['Asia', 'America', 'Africa', 'Australia'], a: 2 },
+                ],
+                hard: [
+                    { q: 'Qual è la capitale dell\'Australia?', options: ['Sydney', 'Melbourne', 'Canberra', 'Perth'], a: 2 },
+                    { q: 'Quale fiume attraversa Londra?', options: ['Seine', 'Thames', 'Danubio', 'Reno'], a: 1 },
+                    { q: 'In quale oceano si trova l\'isola di Bali?', options: ['Atlantico', 'Indiani', 'Pacifico', 'Artico'], a: 2 },
+                    { q: 'Quale è il paese più grande per superficie?', options: ['Canada', 'Cina', 'USA', 'Russia'], a: 3 },
+                    { q: 'Dove si trova il monte Everest?', options: ['India', 'Tibet/Nepal', 'Cina', 'Pakistan'], a: 1 },
+                ],
+            },
+        };
+        const pool = all[category]?.[difficulty] || all[category]?.easy || [];
+        const shuffled = [...pool].sort(() => Math.random() - 0.5);
+        return shuffled.slice(0, 5);
+    }
+
+    renderLearnQuestion(windowId) {
+        const state = this.learnState[windowId];
+        const main = document.getElementById(`learn-main-${windowId}`);
+        if (!main || !state.category) return;
+        const difficulty = state.difficulty;
+        const questions = this.getLearnQuestions(state.category, difficulty);
+        if (!state.currentQuestion || state.answered) {
+            state.currentQuestion = questions[Math.floor(Math.random() * questions.length)];
+            state.answered = false;
+        }
+        const q = state.currentQuestion;
+        const catNames = { math: 'Matematica', science: 'Scienze', history: 'Storia', geography: 'Geografia' };
+        const diffNames = { easy: 'Facile', medium: 'Medio', hard: 'Difficile' };
+        main.innerHTML = `
+            <div class="learn-header">
+                <span class="learn-cat-badge">${catNames[state.category] || state.category}</span>
+                <span class="learn-diff-badge">${diffNames[difficulty]}</span>
+                <span class="learn-score">Punteggio: ${state.score}/${state.total}</span>
+            </div>
+            <div class="learn-question" id="learn-question-${windowId}">
+                <h3>${this.escapeHtml(q.q)}</h3>
+                <div class="learn-options">
+                    ${q.options.map((opt, i) => `
+                        <button class="learn-option-btn" onclick="app.checkLearnAnswer('${windowId}', ${i}, ${q.a})">${this.escapeHtml(opt)}</button>
+                    `).join('')}
+                </div>
+                <div class="learn-feedback" id="learn-feedback-${windowId}"></div>
+            </div>
+        `;
+    }
+
+    checkLearnAnswer(windowId, selected, correct) {
+        const state = this.learnState[windowId];
+        if (state.answered) return;
+        state.answered = true;
+        state.total++;
+        const feedback = document.getElementById(`learn-feedback-${windowId}`);
+        if (selected === correct) {
+            state.score++;
+            if (feedback) {
+                feedback.className = 'learn-feedback correct';
+                feedback.textContent = '✅ Corretto! Molto bene!';
+            }
+            this.playSound('success');
+        } else {
+            if (feedback) {
+                feedback.className = 'learn-feedback wrong';
+                feedback.textContent = `❌ Sbagliato. La risposta corretta era: ${state.currentQuestion.options[correct]}`;
+            }
+            this.playSound('error');
+        }
+        const scoreEl = document.querySelector(`#learn-app-${windowId} .learn-score`);
+        if (scoreEl) scoreEl.textContent = `Punteggio: ${state.score}/${state.total}`;
+        setTimeout(() => this.renderLearnQuestion(windowId), 1500);
+    }
+
     getLearnContent(windowId) {
         return `
-            <div class="learn-app">
-                <h3>Impara</h3>
-                <p>Qui puoi seguire lezioni interattive su vari argomenti.</p>
+            <div class="learn-app" id="learn-app-${windowId}">
+                <div class="learn-sidebar">
+                    <h3>Impara</h3>
+                    <div class="learn-categories" id="learn-categories-${windowId}">
+                        ${this.getLearnCategoriesHTML(windowId)}
+                    </div>
+                    <div class="learn-difficulty">
+                        <label>Difficoltà:</label>
+                        <select class="learn-diff-select" id="learn-diff-${windowId}" onchange="app.setLearnDifficulty('${windowId}', this.value)">
+                            <option value="easy">Facile</option>
+                            <option value="medium">Medio</option>
+                            <option value="hard">Difficile</option>
+                        </select>
+                    </div>
+                    <div class="learn-progress" id="learn-progress-${windowId}">
+                        <div class="learn-progress-label">Progresso</div>
+                        <div class="learn-progress-bar-bg">
+                            <div class="learn-progress-bar" id="learn-progress-bar-${windowId}" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="learn-main" id="learn-main-${windowId}">
+                    <div class="learn-welcome">
+                        <h2>Benvenuto in Impara!</h2>
+                        <p>Scegli una categoria e inizia a studiare.</p>
+                    </div>
+                </div>
             </div>
         `;
     }
@@ -2267,6 +3004,18 @@ class WebOSApp {
                 break;
             case 'app-store':
                 this.initAppStore(windowId);
+                break;
+            case 'calendar':
+                this.initCalendar(windowId);
+                break;
+            case 'draw':
+                this.initDraw(windowId);
+                break;
+            case 'clock':
+                this.initClock(windowId);
+                break;
+            case 'learn':
+                this.initLearn(windowId);
                 break;
         }
     }

@@ -4212,3 +4212,746 @@ body.high-contrast .window-titlebar {
         max-height: 100px;
     }
 }
+
+/* ===== App: Calendar ===== */
+.calendar-app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 16px;
+    gap: 12px;
+}
+
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+}
+
+.calendar-nav-btn {
+    background: white;
+    border: 1px solid var(--webosx-border);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    color: var(--webosx-text);
+}
+
+.calendar-nav-btn:hover {
+    background: var(--webosx-primary);
+    color: white;
+    border-color: var(--webosx-primary);
+}
+
+.calendar-month {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--webosx-text);
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: 4px;
+}
+
+.cal-weekday {
+    text-align: center;
+    font-size: 11px;
+    color: var(--webosx-text-secondary);
+    font-weight: 600;
+    padding: 4px;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.cal-cell {
+    text-align: center;
+    padding: 8px 4px;
+    font-size: 13px;
+    border-radius: 8px;
+    color: var(--webosx-text);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+}
+
+.cal-cell:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.cal-cell.cal-today {
+    background: var(--webosx-primary);
+    color: white;
+    font-weight: 700;
+}
+
+.cal-cell.cal-today:hover {
+    background: var(--webosx-primary-dark);
+}
+
+.cal-cell.cal-empty {
+    color: transparent;
+    cursor: default;
+}
+
+.cal-cell.cal-empty:hover {
+    background: transparent;
+}
+
+.cal-cell.selected {
+    background: rgba(59, 130, 246, 0.15);
+    outline: 2px solid var(--webosx-primary);
+}
+
+.cal-cell.has-event::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: var(--webosx-warning);
+    border-radius: 50%;
+}
+
+.calendar-events-panel {
+    background: rgba(255,255,255,0.5);
+    border-radius: var(--webosx-radius-sm);
+    padding: 12px;
+    border: 1px solid var(--webosx-border);
+    flex: 1;
+    overflow-y: auto;
+}
+
+.calendar-events-panel h4 {
+    font-size: 14px;
+    color: var(--webosx-text);
+    margin-bottom: 10px;
+}
+
+.calendar-events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.calendar-no-events {
+    font-size: 13px;
+    color: var(--webosx-text-secondary);
+    text-align: center;
+    padding: 20px;
+}
+
+.calendar-event-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid var(--webosx-border);
+}
+
+.calendar-event-time {
+    font-size: 12px;
+    color: var(--webosx-text-secondary);
+    flex-shrink: 0;
+}
+
+.calendar-event-title {
+    flex: 1;
+    font-size: 13px;
+    color: var(--webosx-text);
+}
+
+.calendar-delete-btn {
+    background: none;
+    border: none;
+    color: var(--webosx-danger);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+}
+
+.calendar-delete-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.calendar-add-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 12px;
+    background: rgba(255,255,255,0.5);
+    border-radius: var(--webosx-radius-sm);
+    border: 1px solid var(--webosx-border);
+    flex-wrap: wrap;
+}
+
+.calendar-add-form input {
+    padding: 8px 12px;
+    border: 1px solid var(--webosx-border);
+    border-radius: 6px;
+    font-size: 13px;
+    outline: none;
+    background: white;
+    color: var(--webosx-text);
+}
+
+.calendar-add-form input[type="text"] {
+    flex: 1;
+    min-width: 150px;
+}
+
+.calendar-add-form input[type="time"] {
+    width: auto;
+}
+
+.calendar-save-btn {
+    background: var(--webosx-success);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.calendar-save-btn:hover {
+    background: #059669;
+}
+
+.calendar-cancel-btn {
+    background: white;
+    border: 1px solid var(--webosx-border);
+    color: var(--webosx-text);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.calendar-cancel-btn:hover {
+    background: var(--webosx-danger);
+    color: white;
+    border-color: var(--webosx-danger);
+}
+
+/* ===== App: Draw ===== */
+.draw-app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.draw-toolbar {
+    display: flex;
+    gap: 16px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.5);
+    border-bottom: 1px solid var(--webosx-border);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.draw-tool-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.draw-label {
+    font-size: 12px;
+    color: var(--webosx-text-secondary);
+    font-weight: 500;
+}
+
+.draw-color-picker {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--webosx-border);
+    border-radius: 8px;
+    cursor: pointer;
+    padding: 2px;
+    background: white;
+}
+
+.draw-size-slider {
+    width: 100px;
+    accent-color: var(--webosx-primary);
+}
+
+.draw-size-value {
+    font-size: 12px;
+    color: var(--webosx-text-secondary);
+    min-width: 20px;
+}
+
+.draw-tool-btn {
+    background: white;
+    border: 1px solid var(--webosx-border);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    color: var(--webosx-text);
+}
+
+.draw-tool-btn:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.draw-tool-btn.active {
+    background: var(--webosx-primary);
+    color: white;
+    border-color: var(--webosx-primary);
+}
+
+.draw-action-btn {
+    background: white;
+    border: 1px solid var(--webosx-border);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    color: var(--webosx-text);
+}
+
+.draw-action-btn:hover {
+    background: var(--webosx-primary);
+    color: white;
+    border-color: var(--webosx-primary);
+}
+
+.draw-save-btn {
+    background: var(--webosx-success);
+    color: white;
+    border-color: var(--webosx-success);
+}
+
+.draw-save-btn:hover {
+    background: #059669;
+}
+
+.draw-canvas-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    background: #e5e5e5;
+    border-radius: var(--webosx-radius-sm);
+    margin: 0 12px 12px;
+}
+
+.draw-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+/* ===== App: Clock ===== */
+.clock-app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 16px;
+    gap: 16px;
+}
+
+.clock-tabs {
+    display: flex;
+    gap: 8px;
+    background: rgba(255,255,255,0.5);
+    padding: 6px;
+    border-radius: var(--webosx-radius-sm);
+    border: 1px solid var(--webosx-border);
+}
+
+.clock-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--webosx-text-secondary);
+    transition: all 0.2s ease;
+}
+
+.clock-tab:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--webosx-text);
+}
+
+.clock-tab.active {
+    background: var(--webosx-primary);
+    color: white;
+}
+
+.clock-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.clock-display {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--webosx-text);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+.clock-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.clock-btn {
+    background: white;
+    border: 1px solid var(--webosx-border);
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    color: var(--webosx-text);
+}
+
+.clock-btn:hover {
+    background: var(--webosx-primary);
+    color: white;
+    border-color: var(--webosx-primary);
+}
+
+.clock-start-btn {
+    background: var(--webosx-success);
+    color: white;
+    border-color: var(--webosx-success);
+}
+
+.clock-start-btn:hover {
+    background: #059669;
+}
+
+.clock-laps {
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.clock-lap-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 6px;
+    border: 1px solid var(--webosx-border);
+    font-size: 13px;
+    color: var(--webosx-text);
+}
+
+.timer-inputs {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+.timer-input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.timer-input-group label {
+    font-size: 12px;
+    color: var(--webosx-text-secondary);
+}
+
+.timer-input {
+    width: 80px;
+    padding: 10px;
+    border: 1px solid var(--webosx-border);
+    border-radius: 8px;
+    font-size: 18px;
+    text-align: center;
+    outline: none;
+    background: white;
+    color: var(--webosx-text);
+}
+
+.timer-input:focus {
+    border-color: var(--webosx-primary);
+}
+
+/* ===== App: Learn ===== */
+.learn-app {
+    display: flex;
+    height: 100%;
+}
+
+.learn-sidebar {
+    width: 220px;
+    background: rgba(255,255,255,0.5);
+    border-right: 1px solid var(--webosx-border);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+}
+
+.learn-sidebar h3 {
+    font-size: 16px;
+    color: var(--webosx-primary);
+    margin-bottom: 4px;
+}
+
+.learn-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.learn-cat-btn {
+    background: white;
+    border: 1px solid var(--webosx-border);
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    color: var(--webosx-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.learn-cat-btn:hover {
+    background: var(--webosx-primary);
+    color: white;
+    border-color: var(--webosx-primary);
+}
+
+.learn-difficulty {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.learn-difficulty label {
+    font-size: 12px;
+    color: var(--webosx-text-secondary);
+    font-weight: 500;
+}
+
+.learn-diff-select {
+    padding: 8px;
+    border: 1px solid var(--webosx-border);
+    border-radius: 6px;
+    font-size: 13px;
+    background: white;
+    color: var(--webosx-text);
+    outline: none;
+}
+
+.learn-progress {
+    margin-top: auto;
+}
+
+.learn-progress-label {
+    font-size: 12px;
+    color: var(--webosx-text-secondary);
+    margin-bottom: 6px;
+}
+
+.learn-progress-bar-bg {
+    height: 8px;
+    background: var(--webosx-border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.learn-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--webosx-primary), var(--webosx-accent));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.learn-main {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.learn-welcome {
+    text-align: center;
+    padding: 40px;
+}
+
+.learn-welcome h2 {
+    color: var(--webosx-primary);
+    margin-bottom: 12px;
+    font-size: 22px;
+}
+
+.learn-welcome p {
+    color: var(--webosx-text-secondary);
+    font-size: 14px;
+}
+
+.learn-header {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.learn-cat-badge {
+    background: var(--webosx-primary);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.learn-diff-badge {
+    background: var(--webosx-accent);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.learn-score {
+    margin-left: auto;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--webosx-text);
+}
+
+.learn-question {
+    background: rgba(255,255,255,0.5);
+    border-radius: var(--webosx-radius);
+    padding: 24px;
+    border: 1px solid var(--webosx-border);
+}
+
+.learn-question h3 {
+    font-size: 18px;
+    color: var(--webosx-text);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.learn-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.learn-option-btn {
+    background: white;
+    border: 2px solid var(--webosx-border);
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    color: var(--webosx-text);
+    text-align: left;
+}
+
+.learn-option-btn:hover {
+    border-color: var(--webosx-primary);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.learn-feedback {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.learn-feedback.correct {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.learn-feedback.wrong {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .calendar-app {
+        padding: 10px;
+    }
+
+    .draw-toolbar {
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .draw-size-slider {
+        width: 60px;
+    }
+
+    .clock-display {
+        font-size: 32px;
+    }
+
+    .learn-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--webosx-border);
+        max-height: 200px;
+    }
+
+    .learn-app {
+        flex-direction: column;
+    }
+}
